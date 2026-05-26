@@ -10,6 +10,13 @@ The repo is organized by domain or platform (e.g. `apple/`, `web/`), and every S
 
 - **[apple-app-store-screenshots](apple/apple-app-store-screenshots.skill)** — Converts any image into a screenshot that complies with Apple App Store Connect specifications (iPhone, iPad, Mac, Apple TV, Apple Watch, Apple Vision Pro). Produces a PNG at the exact pixel dimensions Apple requires, in RGB without an alpha channel, and handles aspect-ratio mismatches by asking the user how to fit the content (white/black/colored padding, blurred background, stretch, or crop) instead of silently distorting the image. Useful for App Store submissions, TestFlight uploads, or fixing screenshots that Apple rejected.
 
+### web
+
+- **[customer-project-workflow](docs/web/customer-project-workflow.md)** — Detailed guidance for customer-specific projects: folder structure, `CLAUDE.md` orchestration, brand/product references, and how the web skill flow works.
+- **`landing-page-builder`** — Shapes category-aware page structure, hero patterns, trust signals, and CTA hierarchy for web and landing page projects.
+- **`frontend-design`** — Drives bold aesthetic direction, typography, layouts, and anti-pattern fixes for modern web interfaces.
+- **`web-design-guidelines`** — Reviews accessibility, performance, and 100+ UX rules before final delivery.
+
 ---
 
 ## Customer Project Structure
