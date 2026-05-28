@@ -28,6 +28,8 @@ https://raw.githubusercontent.com/vercel-labs/web-interface-guidelines/main/comm
 
 Use WebFetch to retrieve the latest rules. The fetched content contains all the rules and output format instructions.
 
+**Fallback if the fetch fails** (offline, URL moved, network error): do not skip the audit. Fall back to the companion `page-builder` checklists — `page-builder/references/checklists/pre-delivery.md` plus the per-area acceptance checks in `i18n-rtl.md`, `responsive-mobile.md`, `seo-metadata.md`, `forms-conversion.md`, and `performance.md` — and **tell the user** the live guidelines were unavailable so the review used the local baseline instead.
+
 ## Usage
 
 When a user provides a file or pattern argument:

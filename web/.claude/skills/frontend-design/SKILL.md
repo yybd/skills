@@ -40,3 +40,7 @@ Interpret creatively and make unexpected choices that feel genuinely designed fo
 **IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
 
 Remember: Claude is capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+
+## References
+
+- `references/techniques.md` — concrete patterns for the four vectors (typography, color/theme, motion, backgrounds): example font pairings (incl. real Hebrew faces), themes, staggered-load animation, layered backgrounds, an AI-slop checklist, and a baseline-compliant (RTL + mobile-first) quick-start template. The fonts/themes there are **illustrative starting points, not defaults** — keep varying them and never use the forbidden faces (Inter, Roboto, Space Grotesk, system fonts) as your pick.
