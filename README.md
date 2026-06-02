@@ -21,9 +21,8 @@ The repo is organized by domain or platform (e.g. `apple/`, `web/`), and every S
 - **`frontend-design`** — Drives bold aesthetic direction, typography, layouts, and anti-pattern fixes for modern web interfaces.
 - **`web-design-guidelines`** — Reviews accessibility, performance, and 100+ UX rules before final delivery.
 
----
 
-## Customer Project Workflow
+#### Customer Project Workflow
 
 For web projects and customer-specific integrations, we use a structured workflow with a dedicated orchestrator (`CLAUDE.md`), brand/product specifications, and distinct phases for each skill to prevent collisions.
 
