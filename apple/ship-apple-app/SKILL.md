@@ -50,8 +50,15 @@ getting an update skips most of phases 1–2).
   app target. Enable the capabilities the app needs (Sign in with Apple, Push,
   iCloud, etc.) on the identifier.
 - **Signing** — let Xcode "Automatically manage signing", or use `fastlane match`
-  for team certificate sharing. macOS App Store builds need a Mac App
-  Distribution cert + provisioning profile, App Sandbox, and Hardened Runtime.
+  for team certificate sharing. macOS App Store builds need an Apple Distribution
+  cert + Mac Installer Distribution cert + provisioning profile, App Sandbox, and
+  Hardened Runtime.
+- For **certificates and credentials** (which cert/credential is needed, why,
+  creating one, `.p12` export, app-specific passwords, API keys) → **hand off to
+  the `apple-credentials` skill** (it owns these). For **signing configuration
+  and errors** (profiles, entitlements, "no profile found", diagnosis) → the
+  `code-signing-provisioning` skill. If neither is installed, guide inline
+  through Xcode (Settings → Accounts → Manage Certificates) and continue.
 - Detail and exact navigation: [references/appstoreconnect-walkthrough.md](references/appstoreconnect-walkthrough.md#1-developer-portal-identifiers--signing).
 
 ## Phase 2 — Create the app record  [App Store Connect website]
@@ -124,8 +131,14 @@ fastlane can't do these — guide the user through each, with exact navigation:
   Connect website parts (phases 1, 2, 7, 8).
 
 ## Related skills (hand off, don't reimplement)
+- `apple-credentials` — phase 1 (certificates, `.p12`, app-specific passwords,
+  notary profiles, API keys — the credential/cert owner).
+- `code-signing-provisioning` — phase 1 (signing config, provisioning profiles,
+  signing-error diagnosis).
 - `app-store-review-compliance` — phase 3 (and build-time checklist in phase 6).
 - `apple-hig-design-review` — phase 4.
 - `app-store-metadata` — phase 5.
 - `apple-app-store-screenshots` — conform screenshots to exact sizes (used by
   the metadata skill in phase 5).
+- `notarize-and-distribute` — the parallel path for direct (non-App-Store) Mac
+  distribution (Developer ID DMG + notarization), instead of phases 6–8.

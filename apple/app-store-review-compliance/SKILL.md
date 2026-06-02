@@ -166,7 +166,10 @@ behavior or product decisions):
 - Adding a **missing `NS*UsageDescription`** string to Info.plist with a clear,
   honest purpose string (flag it so the user can refine the wording).
 - Scaffolding a **`PrivacyInfo.xcprivacy`** with the Required-Reason API entries
-  implied by the code (fill reasons you can infer; mark the rest `TODO:`).
+  implied by the code (fill reasons you can infer; mark the rest `TODO:`) — but
+  only treat its absence as a *blocker* on iOS/iPadOS/tvOS/watchOS/visionOS; on
+  **macOS** the Required-Reason manifest is not required (see the reference),
+  so offer it as optional good practice, not a finding.
 - Drafting/updating **App Review notes** and demo-mode instructions (as text /
   fastlane `review_information/notes.txt`), like documenting how a reviewer
   reaches a demo path.
@@ -187,9 +190,10 @@ Ask first (these are product or trust decisions, or hard to reverse):
 Before archiving or uploading, or when adding a feature, verify the high-signal
 items (full detail in the reference):
 - Every permission you trigger has an honest `NS*UsageDescription`.
-- If you read any Required-Reason API (UserDefaults, file timestamps, disk
-  space, system boot time, active keyboards), `PrivacyInfo.xcprivacy` declares a
-  valid reason.
+- [iOS family] If you read any Required-Reason API (UserDefaults, file
+  timestamps, disk space, system boot time, active keyboards),
+  `PrivacyInfo.xcprivacy` declares a valid reason — and each bundled
+  commonly-used SDK ships its own manifest. (Not required on macOS.)
 - Any tracking/IDFA use has ATT + `NSUserTrackingUsageDescription`.
 - Digital goods go through StoreKit only; no external "buy here" links; a
   Restore path exists.

@@ -45,17 +45,22 @@ USAGE_STRING_APIS = {
 }
 
 # --- Required-Reason API categories (privacy manifest) -----------------------
+# Apple defines exactly these five categories. Patterns below aim for broad
+# detection within each; matches are evidence to confirm, not proof.
 REQUIRED_REASON_APIS = {
     "NSPrivacyAccessedAPICategoryFileTimestamp": [
         r"\.creationDate", r"\.modificationDate", r"NSFileModificationDate",
-        r"\.fileModificationDate", r"\bstat\(", r"contentModificationDateKey",
+        r"\.fileModificationDate", r"contentModificationDateKey",
+        r"\b[lf]?stat\(", r"getattrlist", r"attributesOfItem",
     ],
     "NSPrivacyAccessedAPICategorySystemBootTime": [
         r"systemUptime", r"mach_absolute_time", r"\.bootTime",
+        r"CLOCK_UPTIME", r"clock_gettime",
     ],
     "NSPrivacyAccessedAPICategoryDiskSpace": [
         r"volumeAvailableCapacity", r"systemFreeSize", r"systemSize",
-        r"resourceValues.*volumeAvailable",
+        r"NSFileSystemFreeSize", r"resourceValues.*volumeAvailable",
+        r"\bstatfs\b", r"\bstatvfs\b", r"\bfstatfs\b",
     ],
     "NSPrivacyAccessedAPICategoryActiveKeyboards": [
         r"activeInputModes",
@@ -196,6 +201,67 @@ def scan_privacy_manifest(root):
     return manifests
 
 
+# A subset of Apple's "commonly used SDKs" that must ship a signature + privacy
+# manifest. Matched against framework/dependency folder names (case-insensitive).
+KNOWN_SDKS = [
+    "Alamofire", "Firebase", "FirebaseAnalytics", "FirebaseCrashlytics",
+    "FirebaseAuth", "FirebaseFirestore", "FirebaseMessaging", "GoogleSignIn",
+    "GoogleMobileAds", "GoogleUtilities", "FBSDKCoreKit", "FBAEMKit",
+    "FBLPromises", "FBSDKLoginKit", "OneSignal", "Lottie", "SDWebImage",
+    "SnapKit", "Realm", "RealmSwift", "RxSwift", "Kingfisher", "Adjust",
+    "AppsFlyerLib", "Branch", "Amplitude", "Mixpanel", "Nimble", "Quick",
+    "Sentry", "Charts", "PromiseKit", "Stripe", "Bugsnag", "Datadog",
+    "Instabug", "AppLovin", "Crashlytics", "GTMSessionFetcher", "abseil",
+]
+
+# Dirs we WILL descend into here (the main scan skips these, but SDK manifests
+# live exactly there). Still avoid build artifacts.
+SDK_SEARCH_SKIP = {".git", "DerivedData", "build", ".build/artifacts"}
+
+
+def scan_sdk_manifests(root):
+    """Find bundled third-party SDK frameworks and whether each ships a privacy
+    manifest. On iOS-family targets, a commonly-used SDK without a manifest is a
+    frequent ITMS-91053 cause; the app's own manifest does NOT cover SDKs."""
+    bundles = []
+    for dirpath, dirnames, _ in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in {".git", "DerivedData"}]
+        for d in list(dirnames):
+            if d.endswith((".framework", ".xcframework")):
+                bundle = os.path.join(dirpath, d)
+                has_manifest = False
+                for bp, _bd, bf in os.walk(bundle):
+                    if any(f.endswith(".xcprivacy") for f in bf):
+                        has_manifest = True
+                        break
+                lower = d.lower()
+                known = next((s for s in KNOWN_SDKS if s.lower() in lower), None)
+                bundles.append({
+                    "name": d,
+                    "path": rel(root, bundle),
+                    "has_privacy_manifest": has_manifest,
+                    "known_sdk": known,
+                })
+    # Also note dependency manager presence (their checkouts may not be vendored
+    # in-repo, so absence here doesn't mean no SDKs).
+    managers = {
+        "cocoapods": os.path.isfile(os.path.join(root, "Podfile")),
+        "carthage": os.path.isfile(os.path.join(root, "Cartfile")),
+        "spm": os.path.isfile(os.path.join(root, "Package.swift"))
+               or bool(glob.glob(os.path.join(root, "**", "Package.resolved"), recursive=True)),
+    }
+    flagged = [b for b in bundles if not b["has_privacy_manifest"]]
+    return {
+        "dependency_managers": {k: v for k, v in managers.items() if v},
+        "frameworks_found": len(bundles),
+        "frameworks_without_manifest": [b for b in flagged],
+        "all_frameworks": bundles,
+        "note": ("SPM/CocoaPods packages are often resolved outside the repo "
+                 "(DerivedData/SourcePackages); if a manager is present but few "
+                 "frameworks were found here, check the resolved packages too."),
+    }
+
+
 def read_pbxproj(root):
     pbx = glob.glob(os.path.join(root, "*.xcodeproj", "project.pbxproj"))
     pbx += glob.glob(os.path.join(root, "**", "*.xcodeproj", "project.pbxproj"), recursive=True)
@@ -285,13 +351,16 @@ def main():
         },
         "entitlements": scan_entitlements(root),
         "privacy_manifests": scan_privacy_manifest(root),
+        "sdk_privacy_manifests": scan_sdk_manifests(root),
         "usage_string_checks": cross_check_usage_strings(root, info_plists, generated_usage_keys),
         "required_reason_apis_used": grep_signals(root, REQUIRED_REASON_APIS),
         "feature_signals": grep_signals(root, FEATURE_SIGNALS),
         "notes": [
             "Evidence only — confirm each signal against the code before reporting.",
             "usage_string_checks: present_in_plist=false is a likely 5.1.1 finding.",
-            "required_reason_apis_used + empty privacy_manifests => likely manifest finding.",
+            "PRIVACY MANIFEST IS PLATFORM-SPECIFIC: the Required-Reason API manifest is enforced only on iOS/iPadOS/tvOS/watchOS/visionOS. For a macOS-only app, do NOT report a missing manifest as a blocker.",
+            "required_reason_apis_used + empty privacy_manifests => likely manifest finding ONLY on iOS-family targets (see project.platforms).",
+            "sdk_privacy_manifests.frameworks_without_manifest: on iOS-family, a commonly-used SDK (known_sdk set) without a manifest is a frequent ITMS-91053 cause; the app's own manifest does not cover SDKs.",
             "feature_signals social_login present without sign_in_with_apple => check 4.8.",
             "feature_signals account_creation present without account_deletion => check 5.1.1(v).",
             "feature_signals storekit present without iap_restore => check 3.1.1 restore.",

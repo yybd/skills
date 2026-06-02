@@ -232,29 +232,61 @@ menu-bar entry discoverable. (Relevant to 2.1 — see the worked pattern.)
 
 ## Privacy manifest & Required-Reason APIs
 
-### PrivacyInfo.xcprivacy required `[both]` 🔴 when applicable
-Rule: apps (and bundled third-party SDKs on Apple's list) must include a privacy
-manifest declaring collected data types, tracking, tracking domains, and
-**Required-Reason API** usage with an approved reason code. Missing/incomplete
-manifests now trigger automated rejection emails (ITMS-91053 etc.).
-Required-Reason API categories to detect in code:
-- **File timestamp APIs** — `creationDate`/`modificationDate`,
-  `.fileModificationDate`, `stat`, `NSFileModificationDate`
-  → category `NSPrivacyAccessedAPICategoryFileTimestamp` (reasons e.g. `C617.1`,
-  `DDA9.1`)
-- **System boot time** — `systemUptime`, `mach_absolute_time`
-  → `...CategorySystemBootTime` (`35F9.1`, `8FFB.1`)
-- **Disk space** — `volumeAvailableCapacity*`, `systemFreeSize`
-  → `...CategoryDiskSpace` (`E174.1`, `85F4.1`)
-- **Active keyboard** — `activeInputModes`
-  → `...CategoryActiveKeyboards` (`3EC4.1`)
-- **User defaults** — `UserDefaults` / `NSUserDefaults`
-  → `...CategoryUserDefaults` (`CA92.1`, `1C8F.1`)
-Fix (safe to scaffold): create `PrivacyInfo.xcprivacy` (a plist) with
-`NSPrivacyAccessedAPITypes` entries for each detected category and a reason you
-can infer; mark unknown reasons `TODO:` and tell the user to confirm. Also set
+### PrivacyInfo.xcprivacy — Required-Reason APIs 🔴 iOS family / ⚪ macOS
+**PLATFORM APPLICABILITY — check this first, it changes the severity:**
+The Required-Reason API manifest declaration is enforced (ITMS-91053, rejection
+since 2024-05-01) only on **iOS, iPadOS, tvOS, watchOS, and visionOS**. Apple
+does **NOT** require the Required-Reason API declaration for **macOS** apps. So:
+- `[iOS/iPadOS/tvOS/watchOS/visionOS]` → 🔴 a missing/incomplete manifest when
+  Required-Reason APIs are used is a (often automated) rejection.
+- `[macOS]` → ⚪ not required. A correct manifest is harmless and good practice
+  (future-proofs an iOS port, feeds the Xcode privacy report), but do NOT report
+  its absence as a blocker for a macOS-only app. (The App Store Connect "App
+  Privacy" nutrition label, however, IS required on macOS too — that's a
+  separate, website-side declaration, not this file.)
+
+Rule (on the platforms above): the app — and each bundled **third-party SDK on
+Apple's "commonly used" list** — must include a `PrivacyInfo.xcprivacy`
+declaring collected data types, tracking, tracking domains, and Required-Reason
+API usage with an approved reason code. The app's own manifest does NOT cover
+SDKs; every such SDK needs its own manifest inside its bundle (and a valid
+signature). Missing SDK manifests are a very common ITMS-91053 cause.
+
+Required-Reason API categories — Apple defines **exactly these five** (there are
+no others; "more coverage" means more detection patterns + reason codes per
+category, not new categories). Detect usage in code and map to a reason:
+- **File timestamp** → `NSPrivacyAccessedAPICategoryFileTimestamp`. APIs:
+  `creationDate`, `modificationDate`, `.fileModificationDate`,
+  `NSFileModificationDate`, `contentModificationDateKey`,
+  `URLResourceKey.contentModificationDateKey`, `stat`/`fstat`/`lstat`,
+  `getattrlist`, `NSFileManager.attributesOfItem`. Reasons: `C617.1` (display to
+  user / same app), `3B52.1` (access by another process the user initiated),
+  `0A2A.1` (3rd-party SDK on behalf of app), `DDA9.1` (file timestamp APIs).
+- **System boot time** → `...CategorySystemBootTime`. APIs: `systemUptime`,
+  `mach_absolute_time`, `clock_gettime(CLOCK_UPTIME...)`, `NSProcessInfo`
+  uptime. Reasons: `35F9.1` (measure elapsed time), `8FFB.1` (calc absolute
+  timestamps for in-app events).
+- **Disk space** → `...CategoryDiskSpace`. APIs: `volumeAvailableCapacity*`,
+  `systemFreeSize`, `systemSize`, `NSFileSystemFreeSize`,
+  `statfs`/`statvfs`/`fstatfs`. Reasons: `E174.1` (write/delete to avoid
+  failures), `85F4.1` (display to user), `7D9E.1` (3rd-party SDK on behalf of
+  app), `B728.1` (health/fitness data).
+- **Active keyboards** → `...CategoryActiveKeyboards`. APIs: `activeInputModes`,
+  `UITextInputMode.activeInputModes`. Reasons: `3EC4.1` (custom-keyboard app
+  using it for its own keyboards), `54BD.1` (present correct UI for active
+  keyboards).
+- **User defaults** → `...CategoryUserDefaults`. APIs: `UserDefaults`,
+  `NSUserDefaults`. Reasons: `CA92.1` (read/write info accessible only to the
+  app itself), `1C8F.1` (app-group container shared by your apps), `C56D.1`
+  (3rd-party SDK reading its own defaults), `AC6B.1` (`UserDefaults` to access
+  managed-app config / MDM).
+Fix (safe to scaffold, on iOS-family targets): create `PrivacyInfo.xcprivacy`
+(a plist) with `NSPrivacyAccessedAPITypes` entries for each detected category +
+the inferred reason; mark uncertain reasons `TODO:` for the user to confirm. Set
 `NSPrivacyTracking`, `NSPrivacyTrackingDomains`, `NSPrivacyCollectedDataTypes`
-to match actual behavior (don't guess data collection — ask).
+to match actual behavior (don't guess data collection — ask). For a flagged SDK
+without a manifest, the fix is upgrading to a version that ships one or
+contacting the vendor — you cannot author another vendor's manifest for them.
 
 A minimal manifest skeleton lives at
 [../assets/PrivacyInfo.template.xcprivacy](../assets/PrivacyInfo.template.xcprivacy).
