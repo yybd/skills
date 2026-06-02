@@ -18,7 +18,10 @@ Updated: 2026-06-03 · Skills location: `~/.claude/skills/`
 | **apple-hig-design-review** | Design/accessibility review vs the HIG (prioritized recommendations) | Advisory |
 | **app-store-metadata** | Multi-language metadata via fastlane + validation against Apple's rules | Build + check |
 | **app-icon-generator** | Generate an AppIcon set for all platforms from one image | Generation |
+| **localization-i18n** | In-app localization: strings, hardcoded text, translation completeness, RTL | Check + fix |
 | **notarize-and-distribute** | Direct distribution: DMG → sign → notarize → verify | Execution |
+| **app-store-reviews-responder** | Monitor user reviews and draft responses | Post-launch |
+| **aso-keywords** | Keyword optimization (ASO) for search discoverability | Post-launch |
 
 ---
 
@@ -34,7 +37,10 @@ it isn't installed, fall back to a local minimal version).
 | Review rules + demo mode + privacy manifest + justified entitlements | **app-store-review-compliance** | ship-apple-app |
 | Metadata + screenshots (sizing) | **app-store-metadata** | ship-apple-app |
 | Screenshot resizing | **apple-app-store-screenshots** (built-in) | app-store-metadata |
+| In-app localization (strings, translation, RTL) | **localization-i18n** | — |
 | Icons | **app-icon-generator** | — |
+| User reviews + responses | **app-store-reviews-responder** | — |
+| Keywords / ASO | **aso-keywords** | (reads from app-store-metadata) |
 | Design/accessibility | **apple-hig-design-review** | ship-apple-app (optional) |
 
 ---
@@ -142,6 +148,20 @@ demo mode + review notes. (The real scenario we started from.)
 `app-store-metadata` (listing) → build → submit.
 
 ---
+
+## Planned skills (roadmap)
+
+Skills not yet built — planned future additions to the family:
+
+**Distribution & build**
+- **app-hosting-updates** — upload the DMG to R2/CDN + a Sparkle appcast for
+  auto-updates (the continuation of `notarize-and-distribute`).
+- **storekit-iap** — set up IAP products, StoreKit config, sandbox testing, Restore.
+- **testflight-beta** — upload to TestFlight, manage testers, beta notes.
+- **release-notes-versioning** — auto build/version bump + multi-language
+  "What's New" from git history.
+- **ci-cd-apple** — GitHub Actions / Xcode Cloud for build+test+sign+notarize.
+- **swift-deprecation-migrator** — Swift 6 concurrency, min-OS bumps, deprecated APIs.
 
 ## Notes
 

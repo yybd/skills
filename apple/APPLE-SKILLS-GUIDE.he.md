@@ -18,7 +18,10 @@
 | **apple-hig-design-review** | סקירת עיצוב/נגישות מול ה-HIG (המלצות מדורגות) | ייעוץ |
 | **app-store-metadata** | מטא-דאטה רב-לשוני דרך fastlane + אימות מול דרישות אפל | בנייה+בדיקה |
 | **app-icon-generator** | יצירת AppIcon set לכל הפלטפורמות מתמונה אחת | יצירה |
+| **localization-i18n** | לוקליזציה בתוך האפליקציה: מחרוזות, טקסט קשיח, שלמות תרגום, RTL | בדיקה+תיקון |
 | **notarize-and-distribute** | הפצה ישירה: DMG → חתימה → notarization → אימות | ביצוע |
+| **app-store-reviews-responder** | מעקב אחר ביקורות משתמשים וניסוח תשובות | אחרי שחרור |
+| **aso-keywords** | אופטימיזציית מילות מפתח (ASO) לגילוי בחיפוש | אחרי שחרור |
 
 ---
 
@@ -33,7 +36,10 @@
 | כללי ביקורת + demo mode + privacy manifest + entitlements מוצדקים | **app-store-review-compliance** | ship-apple-app |
 | מטא-דאטה + צילומי מסך (גודל) | **app-store-metadata** | ship-apple-app |
 | התאמת גודל צילומי מסך | **apple-app-store-screenshots** (מובנה) | app-store-metadata |
+| לוקליזציה בתוך האפליקציה (מחרוזות, תרגום, RTL) | **localization-i18n** | — |
 | אייקונים | **app-icon-generator** | — |
+| ביקורות משתמשים + תשובות | **app-store-reviews-responder** | — |
+| מילות מפתח / ASO | **aso-keywords** | (קורא מ-app-store-metadata) |
 | עיצוב/נגישות | **apple-hig-design-review** | ship-apple-app (אופציונלי) |
 
 ---
@@ -140,6 +146,18 @@ review notes. (זה התרחיש האמיתי שממנו התחלנו.)
 `app-store-metadata` (רישום) → build → submit.
 
 ---
+
+## סקילים מתוכננים (Roadmap)
+
+סקילים שטרם נבנו — מתוכננים להוספה עתידית למשפחה:
+
+**הפצה ובנייה**
+- **app-hosting-updates** — העלאת DMG ל-R2/CDN + Sparkle appcast לעדכונים אוטומטיים (ההמשך של `notarize-and-distribute`).
+- **storekit-iap** — הקמת מוצרי IAP, StoreKit config, בדיקות sandbox, Restore.
+- **testflight-beta** — העלאה ל-TestFlight, ניהול בודקים, beta notes.
+- **release-notes-versioning** — העלאת build/version אוטומטית + "What's New" רב-לשוני מ-git.
+- **ci-cd-apple** — GitHub Actions / Xcode Cloud ל-build+test+sign+notarize.
+- **swift-deprecation-migrator** — Swift 6 concurrency, העלאת min-OS, APIs מיושנים.
 
 ## הערות
 
