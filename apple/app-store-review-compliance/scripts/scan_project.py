@@ -1,0 +1,305 @@
+#!/usr/bin/env python3
+"""
+scan_project.py — deterministic compliance signals for an Xcode project.
+
+Emits JSON evidence the model interprets against the curated guidelines. It is
+intentionally conservative: it reports what it *sees* (API references, plist
+keys, entitlements, feature signals) and never decides pass/fail on its own.
+Over-flagging is expected — confirm each signal against the real code.
+
+Usage:
+    python3 scan_project.py <project-root> [--json] [--target NAME]
+
+Stdlib only (plistlib, re, json, os, argparse, glob).
+"""
+
+import argparse
+import glob
+import json
+import os
+import plistlib
+import re
+import sys
+
+# --- API reference -> required Info.plist usage-description key (5.1.1) -------
+# Each: list of code substrings that imply the permission -> plist key(s).
+USAGE_STRING_APIS = {
+    "NSCameraUsageDescription": ["AVCaptureDevice", "UIImagePickerController", ".camera"],
+    "NSMicrophoneUsageDescription": ["AVAudioRecorder", "AVCaptureDevice.*audio", "requestRecordPermission"],
+    "NSPhotoLibraryUsageDescription": ["PHPhotoLibrary", "PHAsset", "photoLibrary"],
+    "NSPhotoLibraryAddUsageDescription": ["UIImageWriteToSavedPhotosAlbum", "PHAssetChangeRequest.creationRequestForAsset"],
+    "NSLocationWhenInUseUsageDescription": ["CLLocationManager", "requestWhenInUseAuthorization", "requestLocation"],
+    "NSLocationAlwaysAndWhenInUseUsageDescription": ["requestAlwaysAuthorization", "allowsBackgroundLocationUpdates"],
+    "NSContactsUsageDescription": ["CNContactStore", "CNContact", "ABAddressBook"],
+    "NSCalendarsUsageDescription": ["EKEventStore", "EKEvent"],
+    "NSRemindersUsageDescription": ["EKReminder"],
+    "NSBluetoothAlwaysUsageDescription": ["CBCentralManager", "CBPeripheralManager", "CoreBluetooth"],
+    "NSLocalNetworkUsageDescription": ["NWBrowser", "NetServiceBrowser", "Bonjour", "_tcp.", "_udp."],
+    "NSSpeechRecognitionUsageDescription": ["SFSpeechRecognizer"],
+    "NSMotionUsageDescription": ["CMMotionManager", "CMPedometer", "CMSensorRecorder"],
+    "NSFaceIDUsageDescription": ["LAContext", ".biometryType", "evaluatePolicy"],
+    "NSAppleMusicUsageDescription": ["MPMediaLibrary", "MPMediaQuery", "MusicKit"],
+    "NSHealthShareUsageDescription": ["HKHealthStore", "HealthKit"],
+    "NSUserTrackingUsageDescription": ["ATTrackingManager", "advertisingIdentifier", "ASIdentifierManager"],
+    "NSAppleEventsUsageDescription": ["NSAppleScript", "AEDeterminePermissionToAutomateTarget", "kAEDontExecute", "NSAppleEventDescriptor"],
+}
+
+# --- Required-Reason API categories (privacy manifest) -----------------------
+REQUIRED_REASON_APIS = {
+    "NSPrivacyAccessedAPICategoryFileTimestamp": [
+        r"\.creationDate", r"\.modificationDate", r"NSFileModificationDate",
+        r"\.fileModificationDate", r"\bstat\(", r"contentModificationDateKey",
+    ],
+    "NSPrivacyAccessedAPICategorySystemBootTime": [
+        r"systemUptime", r"mach_absolute_time", r"\.bootTime",
+    ],
+    "NSPrivacyAccessedAPICategoryDiskSpace": [
+        r"volumeAvailableCapacity", r"systemFreeSize", r"systemSize",
+        r"resourceValues.*volumeAvailable",
+    ],
+    "NSPrivacyAccessedAPICategoryActiveKeyboards": [
+        r"activeInputModes",
+    ],
+    "NSPrivacyAccessedAPICategoryUserDefaults": [
+        r"UserDefaults", r"NSUserDefaults",
+    ],
+}
+
+# --- Sensitive entitlements (macOS / signing) --------------------------------
+SENSITIVE_ENTITLEMENTS = [
+    "com.apple.security.temporary-exception.apple-events",
+    "com.apple.security.temporary-exception",
+    "com.apple.security.automation.apple-events",
+    "com.apple.security.cs.disable-library-validation",
+    "com.apple.security.cs.allow-unsigned-executable-memory",
+    "com.apple.security.cs.allow-jit",
+    "com.apple.security.cs.allow-dyld-environment-variables",
+    "com.apple.security.files.all",
+]
+
+# --- Feature signals ----------------------------------------------------------
+FEATURE_SIGNALS = {
+    "storekit": [r"import StoreKit", r"\.purchase\(", r"Product\.products", r"SKPaymentQueue"],
+    "iap_restore": [r"AppStore\.sync", r"restoreCompletedTransactions", r"Transaction\.currentEntitlements", r"Restore"],
+    "social_login": [r"GIDSignIn", r"FBSDKLoginKit", r"LoginManager", r"GoogleSignIn", r"fbsdk", r"facebook\.com/dialog/oauth", r"accounts\.google\.com"],
+    "sign_in_with_apple": [r"ASAuthorizationAppleIDProvider", r"SignInWithAppleButton", r"ASAuthorizationController"],
+    "account_creation": [r"createUser", r"/register", r"/signup", r"signUp", r"registerUser", r"Auth\.auth\(\)\.createUser"],
+    "account_deletion": [r"deleteUser", r"/delete[-_]?account", r"deleteAccount", r"\.delete\(\).*user"],
+    "att_prompt": [r"ATTrackingManager\.requestTrackingAuthorization"],
+    "tracking_sdk": [r"AppsFlyer", r"Adjust", r"FBSDKCoreKit", r"BranchSDK", r"Amplitude", r"Mixpanel"],
+    "third_party_app_dependency": [r'bundleIdentifier == "com\.', r"runningApplications", r"NSWorkspace\.shared\.runningApplications", r"com\.microsoft\.", r"AXUIElement"],
+    "webview_only_hint": [r"WKWebView", r"UIWebView"],
+    "private_api_hint": [r"\bdlopen\(", r"\bdlsym\(", r"performSelector\(", r"valueForKey"],
+    "external_purchase_link": [r"openURL.*(buy|upgrade|pricing|checkout|subscribe)", r"(stripe|paypal|checkout)\.com", r"https?://[^\"']*(buy|pricing|upgrade|checkout)"],
+}
+
+CODE_EXTS = (".swift", ".m", ".mm", ".h", ".c", ".cpp")
+SKIP_DIRS = {".git", "Pods", "Carthage", "DerivedData", "build", ".build", "node_modules", "fastlane"}
+
+
+def iter_files(root, exts):
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS]
+        for fn in filenames:
+            if fn.endswith(exts):
+                yield os.path.join(dirpath, fn)
+
+
+def rel(root, path):
+    try:
+        return os.path.relpath(path, root)
+    except ValueError:
+        return path
+
+
+def grep_signals(root, patterns_map):
+    """Return {key: [{file, line, text}]} for first match of each pattern per file."""
+    hits = {k: [] for k in patterns_map}
+    compiled = {k: [re.compile(p) for p in pats] for k, pats in patterns_map.items()}
+    for path in iter_files(root, CODE_EXTS):
+        try:
+            with open(path, "r", errors="ignore") as f:
+                lines = f.readlines()
+        except OSError:
+            continue
+        for key, regexes in compiled.items():
+            for i, line in enumerate(lines, 1):
+                if any(rx.search(line) for rx in regexes):
+                    hits[key].append({"file": rel(root, path), "line": i, "text": line.strip()[:160]})
+                    break  # one hit per file per key is enough as evidence
+    return {k: v for k, v in hits.items() if v}
+
+
+def find_plists(root):
+    out = []
+    for path in iter_files(root, (".plist",)):
+        if os.path.basename(path) == "Info.plist" or "Info" in os.path.basename(path):
+            out.append(path)
+    # also any plist literally named Info.plist anywhere
+    return out
+
+
+def load_plist(path):
+    try:
+        with open(path, "rb") as f:
+            return plistlib.load(f)
+    except Exception:
+        return None
+
+
+def scan_info_plists(root):
+    result = []
+    for path in find_plists(root):
+        data = load_plist(path)
+        if not isinstance(data, dict):
+            continue
+        usage_keys = {k: data[k] for k in data if k.endswith("UsageDescription")}
+        result.append({
+            "file": rel(root, path),
+            "usage_keys_present": sorted(usage_keys.keys()),
+            "LSUIElement": data.get("LSUIElement"),
+            "bundle_id": data.get("CFBundleIdentifier"),
+            "url_schemes_present": "CFBundleURLTypes" in data,
+        })
+    return result
+
+
+def scan_entitlements(root):
+    result = []
+    for path in iter_files(root, (".entitlements",)):
+        data = load_plist(path)
+        if not isinstance(data, dict):
+            continue
+        sensitive = [k for k in data if any(k.startswith(s) or k == s for s in SENSITIVE_ENTITLEMENTS)]
+        result.append({
+            "file": rel(root, path),
+            "app_sandbox": data.get("com.apple.security.app-sandbox"),
+            "all_keys": sorted(data.keys()),
+            "sensitive_entitlements": sorted(sensitive),
+        })
+    return result
+
+
+def scan_privacy_manifest(root):
+    manifests = []
+    for path in iter_files(root, (".xcprivacy",)):
+        data = load_plist(path)
+        manifests.append({
+            "file": rel(root, path),
+            "tracking": (data or {}).get("NSPrivacyTracking") if isinstance(data, dict) else None,
+            "accessed_api_categories": [
+                t.get("NSPrivacyAccessedAPIType")
+                for t in (data.get("NSPrivacyAccessedAPITypes") or [])
+            ] if isinstance(data, dict) else [],
+        })
+    # also catch files literally named PrivacyInfo.xcprivacy that os.walk found above
+    return manifests
+
+
+def read_pbxproj(root):
+    pbx = glob.glob(os.path.join(root, "*.xcodeproj", "project.pbxproj"))
+    pbx += glob.glob(os.path.join(root, "**", "*.xcodeproj", "project.pbxproj"), recursive=True)
+    text = ""
+    for p in set(pbx):
+        try:
+            with open(p, "r", errors="ignore") as f:
+                text += f.read()
+        except OSError:
+            pass
+    return bool(pbx), text
+
+
+def infoplist_keys_from_pbxproj(text):
+    """Modern projects generate Info.plist from build settings. Extract the
+    INFOPLIST_KEY_* entries so usage strings defined there aren't reported as
+    missing. Returns (usage_keys_set, lsuielement_value_or_None)."""
+    usage = set()
+    for m in re.finditer(r"INFOPLIST_KEY_(NS\w*UsageDescription)\s*=", text):
+        usage.add(m.group(1))
+    lsui = None
+    m = re.search(r"INFOPLIST_KEY_LSUIElement\s*=\s*([^;]+);", text)
+    if m:
+        lsui = m.group(1).strip().strip('"')
+    return usage, lsui
+
+
+def detect_platforms_and_targets(root):
+    platforms, targets, bundle_ids = set(), [], set()
+    pbx_found, text = read_pbxproj(root)
+    pbx = [1] if pbx_found else []
+    if "SDKROOT = iphoneos" in text or "iphoneos" in text:
+        platforms.add("iOS")
+    if "SDKROOT = macosx" in text or "macosx" in text:
+        platforms.add("macOS")
+    for m in re.finditer(r"PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);", text):
+        bundle_ids.add(m.group(1).strip())
+    for m in re.finditer(r"productType = \"com\.apple\.product-type\.application\";", text):
+        targets.append("application")
+    return {
+        "platforms": sorted(platforms) or ["unknown"],
+        "app_target_count": len(targets),
+        "bundle_ids": sorted(bundle_ids),
+        "pbxproj_found": bool(pbx),
+    }
+
+
+def cross_check_usage_strings(root, info_plists, generated_usage_keys):
+    """For each usage API referenced in code, is the key present in any plist
+    file OR in the generated-plist build settings (INFOPLIST_KEY_*)?"""
+    present = set(generated_usage_keys)
+    for p in info_plists:
+        present.update(p["usage_keys_present"])
+    findings = []
+    api_hits = grep_signals(root, USAGE_STRING_APIS)
+    for key, hits in api_hits.items():
+        findings.append({
+            "usage_key": key,
+            "referenced_in_code": True,
+            "present_in_plist": key in present,
+            "evidence": hits[:3],
+        })
+    return findings
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("root")
+    ap.add_argument("--json", action="store_true", help="(default) emit JSON")
+    args = ap.parse_args()
+    root = os.path.abspath(args.root)
+    if not os.path.isdir(root):
+        print(json.dumps({"error": f"not a directory: {root}"}))
+        sys.exit(1)
+
+    info_plists = scan_info_plists(root)
+    _, pbx_text = read_pbxproj(root)
+    generated_usage_keys, generated_lsui = infoplist_keys_from_pbxproj(pbx_text)
+    report = {
+        "project_root": root,
+        "project": detect_platforms_and_targets(root),
+        "info_plists": info_plists,
+        "generated_infoplist": {
+            "usage_keys_in_build_settings": sorted(generated_usage_keys),
+            "LSUIElement": generated_lsui,
+            "note": "Modern projects generate Info.plist from these settings; no Info.plist file may exist.",
+        },
+        "entitlements": scan_entitlements(root),
+        "privacy_manifests": scan_privacy_manifest(root),
+        "usage_string_checks": cross_check_usage_strings(root, info_plists, generated_usage_keys),
+        "required_reason_apis_used": grep_signals(root, REQUIRED_REASON_APIS),
+        "feature_signals": grep_signals(root, FEATURE_SIGNALS),
+        "notes": [
+            "Evidence only — confirm each signal against the code before reporting.",
+            "usage_string_checks: present_in_plist=false is a likely 5.1.1 finding.",
+            "required_reason_apis_used + empty privacy_manifests => likely manifest finding.",
+            "feature_signals social_login present without sign_in_with_apple => check 4.8.",
+            "feature_signals account_creation present without account_deletion => check 5.1.1(v).",
+            "feature_signals storekit present without iap_restore => check 3.1.1 restore.",
+            "feature_signals third_party_app_dependency => check 2.1 demo path.",
+        ],
+    }
+    print(json.dumps(report, indent=2, default=str))
+
+
+if __name__ == "__main__":
+    main()
