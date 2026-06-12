@@ -6,6 +6,10 @@ The repo is organized by domain or platform (e.g. `apple/`, `web/`), and every S
 
 ## Skills
 
+### android
+
+- **[play-store-metadata](android/play-store-metadata/SKILL.md)** — Create, organize, and validate Google Play Store listing metadata for an Android app using fastlane supply (localized text, store graphics, character limits, and ASO).
+
 ### apple
 
 - **[app-icon-generator](apple/app-icon-generator.skill)** — Generates a complete Xcode app-icon set from a single source image for all Apple platforms (iOS, macOS, watchOS, tvOS, visionOS), placing it correctly in the `.xcassets` catalog.
@@ -24,20 +28,19 @@ The repo is organized by domain or platform (e.g. `apple/`, `web/`), and every S
 
 #### Apple Skills Guide
 
-For a comprehensive overview of how all the Apple-related skills fit together, their dependencies, ownership, and end-to-end workflows (like App Store submission vs. direct DMG distribution), please see the **[Apple Skills Guide](apple/APPLE-SKILLS-GUIDE.he.md)**.
+For a comprehensive overview of how all the Apple-related skills fit together, their dependencies, ownership, and end-to-end workflows (like App Store submission vs. direct DMG distribution), please see the **[Apple Skills Guide (Hebrew)](apple/APPLE-SKILLS-GUIDE.he.md)** or the **[Apple Skills Guide (English)](apple/APPLE-SKILLS-GUIDE.en.md)**.
 
 ### website
 
-- **[customer-project-workflow](docs/web/customer-project-workflow.md)** — Detailed guidance for customer-specific projects: folder structure, `CLAUDE.md` orchestration, brand/product references, and how the web skill flow works.
-- **`landing-page-builder`** — Shapes category-aware page structure, hero patterns, trust signals, and CTA hierarchy for web and landing page projects.
-- **`frontend-design`** — Drives bold aesthetic direction, typography, layouts, and anti-pattern fixes for modern web interfaces.
-- **`web-design-guidelines`** — Reviews accessibility, performance, and 100+ UX rules before final delivery.
-
+- **[customer-project-workflow](web/docs/customer-project-workflow.md)** — Detailed guidance for customer-specific projects: folder structure, `CLAUDE.md` orchestration, brand/product references, and how the web skill flow works (also available in **[Hebrew](web/docs/customer-project-workflow.he.md)**).
+- **[page-builder](web/.claude/skills/page-builder/SKILL.md)** — Shapes category-aware page structure, hero patterns, trust signals, and CTA hierarchy for web and landing page projects.
+- **[frontend-design](web/.claude/skills/frontend-design/SKILL.md)** — Drives bold aesthetic direction, typography, layouts, and anti-pattern fixes for modern web interfaces.
+- **[web-design-guidelines](web/.claude/skills/web-design-guidelines/SKILL.md)** — Reviews accessibility, performance, and 100+ UX rules before final delivery.
 
 #### Customer Project Workflow
 
 For web projects and customer-specific integrations, we use a structured workflow with a dedicated orchestrator (`CLAUDE.md`), brand/product specifications, and distinct phases for each skill to prevent collisions.
 
-For full details on the folder layout, general rules, and the role of each skill in the flow, please see the **[Customer Project Workflow Guide](docs/web/customer-project-workflow.md)**.
+For full details on the folder layout, general rules, and the role of each skill in the flow, please see the **[Customer Project Workflow Guide](web/docs/customer-project-workflow.md)**.
 
 As more Skills are added, they will appear here under the appropriate domain.
