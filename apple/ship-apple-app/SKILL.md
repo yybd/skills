@@ -1,144 +1,95 @@
 ---
 name: ship-apple-app
 description: >-
-  End-to-end playbook for shipping a macOS or iOS app to the App Store / Mac App
-  Store — from bundle ID and app record creation, through compliance, design,
-  metadata, and screenshots, to archive, upload, and submission. Use this when
-  the user wants to release/publish/submit an app to the App Store, asks "how do
-  I get my app on the App Store", wants a step-by-step of the whole process, is
-  starting a submission and unsure of the order, or wants to know which steps are
-  done locally vs on Apple's website. This skill ORCHESTRATES the focused skills
-  (app-store-review-compliance, apple-hig-design-review, app-store-metadata) in
-  the right order and fills the gaps between them (developer portal + App Store
-  Connect website steps).
+  Verify an Apple app is submission-ready and ship it — the FINAL App Store / Mac
+  App Store step: confirm the content is already in place (signing, compliance,
+  metadata, screenshots, app record), then archive, upload, complete the App Store
+  Connect website steps, and submit. Use this when the user wants to
+  release/publish/submit/upload a build, asks "how do I upload or submit to the App
+  Store", or is at the end of the process and wants the verify → upload → submit
+  checklist. This skill does NOT produce the listing copy, screenshots, compliance
+  fixes, or signing — those are owned by their focused skills (app-store-metadata,
+  appstore-media, app-store-review-compliance, apple-credentials,
+  code-signing-provisioning). It VERIFIES their output is present and valid, then
+  builds, uploads, and submits (including the website-only steps fastlane can't do).
 ---
 
-# Ship an Apple App — end-to-end playbook
+# Ship an Apple App — verify & submit
 
-Releasing an app touches three places: your **code/project** (local), the
-**Apple Developer portal** (identifiers, certificates), and **App Store
-Connect** (the app record, listing, submission). The order matters, and the
-single biggest source of confusion is which step lives where. This skill is the
-conductor: it walks the phases, calls the focused skills where they fit, and
-makes every website-only step explicit.
+This is the **final** step of the App Store / Mac App Store path. By the time you run
+it, the content should already exist: signing set up, compliance passed, listing
+metadata + screenshots produced, the app record created. **This skill does not
+re-produce any of that** — it **verifies** each piece is ready, then **archives →
+uploads → finishes on the App Store Connect website → submits**.
 
-It does NOT duplicate the focused skills — when a phase is theirs, hand off to
-them. Use this as a checklist you progress through with the user, confirming
-each phase before moving on. Adapt to where the user already is (a published app
-getting an update skips most of phases 1–2).
+If a verification check fails, **hand off to the skill that owns that piece** to
+produce it, then come back and re-verify. This skill owns only the ship itself
+(build, upload, the website-only steps, submit).
 
-## How to use this playbook
-1. First, figure out where the user is. Ask (or detect): is this a brand-new app
-   or an update? Does the app record already exist in App Store Connect? Is the
-   bundle ID registered? Don't restart from phase 1 for an app that's already
-   live — jump to the relevant phase.
-2. Then move through the phases below in order, doing local work and handing off
-   to the focused skills, and pausing at each website step to guide the user
-   (you can't click in App Store Connect for them — give exact navigation).
-3. Track progress out loud (a short checklist of done/next) so a multi-session
-   submission stays oriented.
+## How to use
+1. Detect where the user is: brand-new app or an update? App record already in App
+   Store Connect? An update skips the one-time setup checks.
+2. Run the **pre-flight verification** below. For anything missing or invalid, hand
+   off to the owning skill, then re-verify — don't produce it here.
+3. **Build → upload → finish-on-website → submit**, confirming before every
+   outward-facing step.
 
-## Phase 0 — Prerequisites (one-time)
-- Apple Developer Program membership (paid) active.
-- Xcode signed in with the developer Apple ID.
-- Decide distribution: App Store (iOS) / Mac App Store (macOS). (Direct/
-  notarized Mac distribution is a different path — not this skill.)
+## Pre-flight verification — confirm each is READY (don't produce here)
 
-## Phase 1 — Identity: bundle ID, certificates, signing  [portal + local]
-- **Bundle ID** — must be registered in the Apple Developer portal (Certificates,
-  Identifiers & Profiles → Identifiers) before an app record can use it. One per
-  app target. Enable the capabilities the app needs (Sign in with Apple, Push,
-  iCloud, etc.) on the identifier.
-- **Signing** — let Xcode "Automatically manage signing", or use `fastlane match`
-  for team certificate sharing. macOS App Store builds need an Apple Distribution
-  cert + Mac Installer Distribution cert + provisioning profile, App Sandbox, and
-  Hardened Runtime.
-- For **certificates and credentials** (which cert/credential is needed, why,
-  creating one, `.p12` export, app-specific passwords, API keys) → **hand off to
-  the `apple-credentials` skill** (it owns these). For **signing configuration
-  and errors** (profiles, entitlements, "no profile found", diagnosis) → the
-  `code-signing-provisioning` skill. If neither is installed, guide inline
-  through Xcode (Settings → Accounts → Manage Certificates) and continue.
-- Detail and exact navigation: [references/appstoreconnect-walkthrough.md](references/appstoreconnect-walkthrough.md#1-developer-portal-identifiers--signing).
+| Area | Verify it's ready | Owned/produced by |
+|------|-------------------|-------------------|
+| **App record + bundle ID** | the bundle ID is registered (portal) and the app record exists in App Store Connect | one-time portal/ASC setup |
+| **Signing** | Apple Distribution cert + profile present; MAS build is sandboxed + Hardened Runtime | `apple-credentials` (certs/credentials) · `code-signing-provisioning` (config/errors) |
+| **Compliance** | no blockers — run the build-time checklist | `app-store-review-compliance` |
+| **Listing metadata** | every locale present and within Apple's limits (run the validator) | `app-store-metadata` (the listing copy may be authored upstream — e.g. from an app profile — this skill only checks it's present & valid) |
+| **Screenshots** | exact sizes for every required device class, all locales — for BD TECH apps the source media lives in the hub at `~/Developer/app-hub/<slug>/media/apple/` | `appstore-media` (capture) · `apple-app-store-screenshots` (conform) |
+| **In-app localization** | UI fully localized if shipping multi-locale | `localization-i18n` |
+| **Design** (optional) | no high-impact accessibility/HIG issues | `apple-hig-design-review` |
 
-## Phase 2 — Create the app record  [App Store Connect website]
-- App Store Connect → My Apps → **+ → New App**. Pick platform, the registered
-  bundle ID, primary language, name, SKU.
-- `fastlane produce` can create the record via API as an alternative, but the
-  identifier setup in phase 1 is still portal work.
-- Steps: [references/appstoreconnect-walkthrough.md](references/appstoreconnect-walkthrough.md#2-create-the-app-record).
+**Verify, don't re-produce.** If an item is missing or invalid, hand off to the
+owning skill above, then return here.
 
-## Phase 3 — Compliance pass  [local → hand off]
-Before investing in listing copy, make sure the app won't be rejected.
-**Hand off to the `app-store-review-compliance` skill** for a full audit
-(privacy strings, PrivacyInfo.xcprivacy, IAP rules, Sign in with Apple, account
-deletion, sandbox/entitlement justification, and app-completeness/demo-mode).
-Fix blockers now — they're cheaper to fix before a build than after a rejection.
-
-## Phase 4 — Design pass (optional but recommended)  [local → hand off]
-If the app's UI hasn't had a design review, **hand off to the
-`apple-hig-design-review` skill** for prioritized accessibility/native-feel
-improvements. Optional for shipping, but accessibility issues are the cheapest
-quality win and shade into review territory.
-
-## Phase 5 — Metadata & screenshots  [local → hand off]
-**Hand off to the `app-store-metadata` skill**: it checks/installs fastlane,
-asks which languages (single vs multi) and whether to do text-only or
-text+screenshots, scaffolds and fills the localized files, validates against
-Apple's limits, and uploads via `deliver`. It also lists the website-only
-listing steps.
-
-## Phase 6 — Build, archive, upload  [local]
+## Build & archive  [local]
 - Bump version/build number (build must be higher than any previously uploaded).
-- Archive the App Store target (Xcode: Product → Archive, or
-  `fastlane gym`/`build_app`).
-- Upload the binary (Xcode Organizer, Transporter, or `fastlane deliver`/
-  `pilot` for TestFlight). Processing takes minutes — wait for it to finish
-  before selecting the build in App Store Connect.
-- Run the compliance skill's **build-time checklist** before archiving so you
-  don't ship a known-rejectable build.
+- Archive the App Store target (Xcode: Product → Archive, or `fastlane gym`/`build_app`).
 
-## Phase 7 — Finish the listing on the website  [App Store Connect website]
-fastlane can't do these — guide the user through each, with exact navigation:
+## Upload  [local]
+- Upload the binary (Xcode Organizer, Transporter, or `fastlane deliver`/`pilot` for
+  TestFlight). Processing takes minutes — wait for it before selecting the build.
+- Upload the verified metadata/screenshots via the metadata skill's `deliver` lane if
+  not already uploaded (`--verify_only`/precheck first).
+
+## Finish on the App Store Connect website  [website — fastlane can't]
+Guide the user through each, with exact navigation:
 - Select the uploaded **build** for the version.
-- **Age rating** questionnaire.
-- **Pricing & availability** (tier, territories).
-- **App Privacy** "nutrition label" — must match the privacy manifest / real
-  behavior.
-- **Export compliance** (encryption) declaration.
-- Content rights; any in-app purchases created & submitted with the version.
+- **Age rating** questionnaire · **Pricing & availability** · **App Privacy** nutrition
+  label (must match the privacy manifest / real behavior) · **Export compliance** ·
+  content rights; any IAPs created & submitted with the version.
 - Walkthrough: [references/appstoreconnect-walkthrough.md](references/appstoreconnect-walkthrough.md#7-finish-and-submit).
 
-## Phase 8 — Submit & after
+## Submit
 - **Submit for Review** (never auto-submit without the user's explicit go-ahead).
 - Choose manual vs automatic release.
 - If rejected: read the resolution-center message, map it to a guideline (the
-  compliance skill helps), fix, and reply/resubmit. Demo-mode/2.1 rejections in
-  particular are about making the app reviewable — see the compliance skill's
-  worked pattern.
+  `app-store-review-compliance` skill helps), fix, and reply/resubmit.
 
 ## Boundaries
-- You cannot operate the App Store Connect website or the developer portal for
-  the user — for every website step, give the exact menu path and what to enter,
-  then wait for them to confirm it's done.
-- Uploading and submitting are outward-facing and often irreversible (a
-  submitted build, a published release) — always confirm before running an
-  upload/submit command or telling the user to press Submit.
+- You cannot operate the App Store Connect website or the developer portal for the
+  user — for every website step, give the exact menu path and what to enter, then wait
+  for them to confirm.
+- Uploading and submitting are outward-facing and often irreversible — always confirm
+  before an upload/submit command or before telling the user to press Submit.
 
 ## Reference files
 - [references/appstoreconnect-walkthrough.md](references/appstoreconnect-walkthrough.md)
-  — detailed, navigation-level steps for the developer portal and App Store
-  Connect website parts (phases 1, 2, 7, 8).
+  — navigation-level steps for the portal + App Store Connect website parts.
 
-## Related skills (hand off, don't reimplement)
-- `apple-credentials` — phase 1 (certificates, `.p12`, app-specific passwords,
-  notary profiles, API keys — the credential/cert owner).
-- `code-signing-provisioning` — phase 1 (signing config, provisioning profiles,
-  signing-error diagnosis).
-- `app-store-review-compliance` — phase 3 (and build-time checklist in phase 6).
-- `apple-hig-design-review` — phase 4.
-- `app-store-metadata` — phase 5.
-- `apple-app-store-screenshots` — conform screenshots to exact sizes (used by
-  the metadata skill in phase 5).
+## Related skills (they produce; this skill verifies + ships)
+- `apple-credentials` · `code-signing-provisioning` — signing/credentials (verify ready).
+- `app-store-review-compliance` — compliance (verify it passes).
+- `app-store-metadata` — listing metadata files + `deliver` upload (verify present/valid).
+- `appstore-media` · `apple-app-store-screenshots` — screenshots/preview (verify present; for BD TECH apps the source lives in the hub at `~/Developer/app-hub/<slug>/media/apple/`).
+- `aso-keywords` — keyword optimization (applied upstream, into the metadata).
+- `localization-i18n` — in-app strings (verify complete).
 - `notarize-and-distribute` — the parallel path for direct (non-App-Store) Mac
-  distribution (Developer ID DMG + notarization), instead of phases 6–8.
+  distribution (Developer ID DMG), instead of upload/submit here.

@@ -25,6 +25,15 @@ Guide the user — don't just generate files. Listing copy is a product/marketin
 decision; ask for the positioning and translate intent faithfully rather than
 inventing claims. Confirm before installing tools or uploading.
 
+> **Where the listing copy comes from.** This skill owns the file mechanics —
+> scaffolding, field placement, character-limit validation, and the `deliver`
+> upload — not necessarily the wording. In the **BD TECH studio flow** the copy is
+> lifted from the app's profile (`~/Developer/app-hub/<slug>/profile.md`) by the
+> `store-metadata-writer` skill, which drives this one; so when a profile exists,
+> take the copy from there (or let `store-metadata-writer` orchestrate) instead of
+> re-authoring it here. Standalone (no profile), write the fields with the user as
+> below. Either way, never fabricate claims.
+
 ## Workflow
 
 ### 1. Check fastlane
@@ -75,13 +84,20 @@ Scaffold the per-locale structure (won't overwrite existing content):
 ```bash
 python3 ~/.claude/skills/app-store-metadata/scripts/scaffold_metadata.py <metadata-root> --locales en-US,de-DE,he
 ```
-Then fill the fields. For multi-locale work, write the base language with the
-user, then translate to the others — keeping each field within its limit (the
-translated string, not the source, must fit). Field list, limits, and which
-files are per-locale vs shared are in
+Then fill the fields. In the BD TECH studio flow the wording comes from the
+profile (via `store-metadata-writer`); standalone, write the base language with
+the user, then translate to the others — keeping each field within its limit (the
+translated string, not the source, must fit). The 100-char **keywords** field is
+an ASO decision owned by the `aso-keywords` skill — this skill just stores and
+validates it. Field list, limits, and which files are per-locale vs shared are in
 [references/metadata-spec.md](references/metadata-spec.md).
 
 ### 5. Screenshots (only if chosen)
+Three skills divide this work: for a full, repeatable **capture** (a scripted
+XCUITest demo flow producing stills + App Preview videos across locales) hand off
+to the `appstore-media` skill; for a one-off **conform** of an existing image to
+an exact size use `apple-app-store-screenshots`; this skill then **organizes** the
+resulting files under `metadata/` and uploads them via `deliver`.
 - **iOS** — you can automate with `fastlane snapshot` (UI-test driven capture
   across devices/locales) and `frameit` for framing. See
   [references/screenshots.md](references/screenshots.md).

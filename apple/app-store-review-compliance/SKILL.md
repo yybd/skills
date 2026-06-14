@@ -183,7 +183,11 @@ Ask first (these are product or trust decisions, or hard to reverse):
 - Changing **payment** flows or removing external links.
 - Anything touching **signing, sandbox, or Hardened Runtime** settings.
 - Building an in-app **demo mode** (it's code that ships to real users — design
-  it with them; see the worked pattern in the reference).
+  it with them; see the worked pattern in the reference). This is the *App Review*
+  demo path — letting a reviewer use the app past a login/paywall. Don't confuse
+  it with the *marketing-capture* demo mode in the `appstore-media` skill, which
+  seeds attractive data for screenshots (one launch argument can serve both, but
+  the goals differ).
 
 ## Build-time checklist
 

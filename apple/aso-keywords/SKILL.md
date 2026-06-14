@@ -23,6 +23,13 @@ It's the strategy/optimization layer; `app-store-metadata` owns the actual files
 and validates Apple's character limits. This skill reads those fields, audits
 them for ASO, and proposes better content; metadata applies the changes.
 
+> **In the BD TECH studio flow**, the name and subtitle come from the app's
+> profile (`~/Developer/app-hub/<slug>/profile.md`) via `store-metadata-writer`,
+> and the keyword *intent* is the app's own vocabulary already in the profile —
+> lift and optimize from there rather than inventing a separate brand voice. This
+> skill owns the **keyword strategy and the 100-char field**; `app-store-metadata`
+> owns the files. Standalone (no profile), gather terms with the user as below.
+
 ## What this can and can't do
 - ✅ **On-page ASO hygiene & structure** (fully here): field length usage,
   wasted characters, redundancy across name/subtitle/keywords, duplicate/plural
@@ -48,7 +55,8 @@ they're indexed together, so repeating wastes space), **spaces after commas**
 ### 2. Understand the app and its users
 Good keywords come from how users would search for *this* app, not generic terms.
 Ask (or infer): what the app does, the category, the words a non-technical user
-would type, and any strong differentiators. Avoid the app's brand name in
+would type, and any strong differentiators. *(In the studio flow these are
+already in the profile — lift them instead of asking cold.)* Avoid the app's brand name in
 keywords (it already ranks for that) and avoid competitor trademarks (rejection
 risk).
 

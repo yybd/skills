@@ -2,6 +2,8 @@
 
 This phase turns raw, spec-compliant captures into a product page that converts. Two deliverables, both written in Hebrew (with English copy variants inline): `captions.md` and `imovie-plan.md`.
 
+> **Source of truth: the profile.** For a BD TECH app the caption material — the hero feature, the ranked features, the honest differentiators (one-time purchase, local-first/privacy, offline, language support) — already lives in `~/Developer/app-hub/<slug>/profile.md` (its **Derived copy** + advantages), in the hub's `PRODUCT.md` voice. Lift from there and tighten to caption length; don't invent a parallel set of claims. The guidance below is *how* to shape that material into captions, not license to make up new ones.
+
 ## Part 1 — Screenshot captions (`captions.md`)
 
 ### How to write a caption

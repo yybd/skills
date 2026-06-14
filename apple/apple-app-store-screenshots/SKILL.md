@@ -1,6 +1,6 @@
 ---
 name: apple-app-store-screenshots
-description: Convert any image into a screenshot that complies with Apple App Store Connect specifications for iPhone, iPad, Mac, Apple TV, Apple Watch, or Apple Vision Pro. Use whenever the user wants to prepare, format, resize, or fix a screenshot for App Store submission, App Store Connect upload, TestFlight, or an Apple app listing — even if they only say things like "make this image the right size for the App Store", "Apple rejected my screenshot", "format for App Store", or "fit my screenshot to Apple's requirements". Also use when the user mentions a specific Apple device size (e.g. "1290x2796", "6.9 inch display", "Mac App Store screenshot") and wants an image conformed to it. The skill handles aspect-ratio mismatches by asking the user how to fit the content (padded background, blur, stretch, or crop) instead of silently distorting the image.
+description: Convert any image into a screenshot that complies with Apple App Store Connect specifications for iPhone, iPad, Mac, Apple TV, Apple Watch, or Apple Vision Pro. Use whenever the user wants to prepare, format, resize, or fix a screenshot for App Store submission, App Store Connect upload, TestFlight, or an Apple app listing — even if they only say things like "make this image the right size for the App Store", "Apple rejected my screenshot", "format for App Store", or "fit my screenshot to Apple's requirements". Also use when the user mentions a specific Apple device size (e.g. "1290x2796", "6.9 inch display", "Mac App Store screenshot") and wants an image conformed to it. The skill handles aspect-ratio mismatches by asking the user how to fit the content (padded background, blur, stretch, or crop) instead of silently distorting the image. This skill only CONFORMS an image that already exists to exact pixel dimensions — to capture screenshots or an App Preview video from a running app via a scripted demo flow use the `appstore-media` skill, and to organize/validate/upload the listing's screenshot files use the `app-store-metadata` skill.
 ---
 
 # Apple App Store screenshot formatter
@@ -47,12 +47,12 @@ The script validates that the output is exactly `W×H`, PNG, mode `RGB`, then pr
 
 Always create a sub-folder named **`app-store-screenshots/`** next to the source file and write into it. Name the output `<original-stem>-<W>x<H>.png`. Example: `~/Desktop/login.png` → `~/Desktop/app-store-screenshots/login-2880x1800.png`. If `app-store-screenshots/` already exists, reuse it.
 
-If the source file is somewhere the user clearly does not want polluted (e.g. read-only uploads), fall back to the working folder mounted for the session and tell the user where the file ended up.
+If the source file is somewhere the user clearly does not want polluted (e.g. read-only uploads), fall back to a writable location (the current working directory, or `/tmp`) and tell the user the exact path where the file ended up.
 
 ## After the file is written
 
 1. Read the output with the `Read` tool so the user (and you) can confirm visually that it looks right.
-2. Share the file using a `computer://` link so the user can open it on their desktop.
+2. Report the absolute output path so the user can open it (clients that linkify paths will make it clickable).
 3. Briefly state the final dimensions and which Apple device family the file is valid for. No long postamble.
 
 If the user asks for multiple sizes (e.g. "all Mac sizes") loop the script per size and present all the resulting files together at the end.
