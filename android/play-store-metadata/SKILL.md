@@ -28,9 +28,15 @@ Guide the user — don't just generate files. Listing copy is a product/marketin
 decision; ask for the positioning and translate intent faithfully rather than
 inventing claims. Confirm before installing tools or uploading.
 
-> If this app is part of a BD TECH cross-store effort, the `store-listings` skill
-> drives this one with copy lifted from the app's profile — but this skill also
-> stands alone for any Android project.
+> This is the Android counterpart of the **`app-store-metadata`** skill (Apple).
+> In the **BD TECH studio flow**, cross-store coordination belongs to
+> `store-metadata-writer` (Hub): it lifts one copy block from the app's profile
+> (`~/Developer/app-hub/<slug>/profile.md`), keeps Apple and Play consistent, and
+> drives this skill for the Play file mechanics — so when a profile exists, take
+> the copy from there, don't independently re-author or translate it here.
+> Standalone (any Android-only project, no profile), this skill writes the copy
+> with the user; if you're also shipping to Apple by hand, write the base copy
+> once and adapt per store (Play has no keywords field — see step 7).
 
 ## Workflow
 
@@ -84,8 +90,9 @@ content):
 ```bash
 python3 ~/.claude/skills/play-store-metadata/scripts/scaffold_metadata.py <project-root> --locales en-US,de-DE,iw-IL
 ```
-Then fill the fields. For multi-locale work, write the base language with the
-user, then translate to the others — keeping each field within its limit (the
+Then fill the fields. In the BD TECH studio flow the wording comes from the
+profile (via `store-metadata-writer`); standalone, write the base language with
+the user, then translate to the others — keeping each field within its limit (the
 translated string, not the source, must fit). Field list, limits, and which
 files are per-locale vs shared are in
 [references/metadata-spec.md](references/metadata-spec.md#text-fields--limits).
