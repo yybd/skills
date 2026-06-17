@@ -5,9 +5,9 @@ macOS/iOS (App Store and direct distribution), plus a sibling for Google Play.
 What each one does, who owns what, the dependencies between them, and usage
 examples.
 
-Updated: 2026-06-14 · Skills location: `~/.claude/skills/` · **14 skills**
+Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **15 skills**
 
-> **BD TECH studio flow:** the 14 skills here are **generic mechanics** (Apple/Google knowledge) and
+> **BD TECH studio flow:** the 15 skills here are **generic mechanics** (Apple/Google knowledge) and
 > work in any project. Inside BD TECH they are driven by the Hub layer: the source of truth for all
 > copy is the app's profile (`<slug>/profile.md`), copy is **lifted** from it (never invented), and
 > media (`appstore-media`) is written into the Hub. For the end-to-end orchestration
@@ -16,7 +16,7 @@ Updated: 2026-06-14 · Skills location: `~/.claude/skills/` · **14 skills**
 
 ---
 
-## Overview — the 14 skills (by role)
+## Overview — the 15 skills (by role)
 
 **Orchestrator**
 
@@ -36,6 +36,7 @@ Updated: 2026-06-14 · Skills location: `~/.claude/skills/` · **14 skills**
 | Skill | One-liner |
 |-------|-----------|
 | **app-store-review-compliance** | Conformance to Apple's Review Guidelines (prevents rejections) + reviewer demo mode |
+| **apple-bug-flow-review** | Functional QA: finds logic/code bugs + broken user flows (static scan + analyzer + sanitizers + XCUITest) |
 | **apple-hig-design-review** | Design/accessibility review vs the HIG (prioritized recommendations) |
 | **localization-i18n** | In-app localization: strings, hardcoded text, translation completeness, RTL |
 
@@ -80,6 +81,7 @@ guidance).
 | Certificates, creation, `.p12`, app-specific password, notary profile, API key | **apple-credentials** | code-signing, notarize-and-distribute, ship-apple-app, app-store-metadata, app-store-reviews-responder |
 | Signing model, provisioning profiles, signing errors, diagnosis | **code-signing-provisioning** | ship-apple-app |
 | Review rules + reviewer demo mode + privacy manifest + justified entitlements | **app-store-review-compliance** | ship-apple-app, appstore-media (to distinguish the two demo modes) |
+| Correctness/robustness bugs + user-flow QA (does it work?) | **apple-bug-flow-review** | ship-apple-app (optional, pre-archive); reuses appstore-media's demo mode + a11y IDs for smoke flows |
 | Design/accessibility (HIG) | **apple-hig-design-review** | ship-apple-app (optional) |
 | In-app localization (strings, translation, RTL) | **localization-i18n** | ship-apple-app (before metadata) |
 | App Store listing files (text + screenshot files) + upload via `deliver` | **app-store-metadata** | ship-apple-app; **fed by** appstore-media, apple-app-store-screenshots, aso-keywords |
@@ -96,6 +98,14 @@ Three skills touch screenshots — don't confuse them:
 - **appstore-media** = **produce** (capture from the running app via an XCUITest demo flow; also App Preview videos).
 - **apple-app-store-screenshots** = **conform** (one image that already exists → exact pixel size).
 - **app-store-metadata** = **organize/upload** (place files into `metadata/`, validate limits, `deliver`).
+
+### The quality trio (don't confuse the three "review" skills)
+Three skills review the app before shipping, each a different question:
+- **apple-bug-flow-review** = **does it work / is it correct?** (crashes, races, leaks, data loss, broken user flows — functional QA).
+- **app-store-review-compliance** = **will Apple accept it?** (Review-Guideline rules — privacy strings, IAP, demo mode, entitlements).
+- **apple-hig-design-review** = **does it feel native & accessible?** (design/UX/accessibility polish vs the HIG).
+
+Overlaps resolve by ownership: a flow-blocking UX bug is bug-flow's; aesthetic polish is HIG's; a rejection rule is compliance's; a security vuln defers to the `security-review` skill.
 
 ### The studio layer (Hub) — where the copy comes from
 In the **BD TECH studio flow** the store workers are driven by the Hub layer, and the source of copy is the profile — never invented:
@@ -179,6 +189,8 @@ fastlane supply (upload) → finish on Play Console (Data safety, content rating
 **code-signing-provisioning** — "I got 'Provisioning profile doesn't include signing certificate' — what now?" · "Diagnose my project's signing"
 
 **app-store-review-compliance** — "Why did Apple reject the app? Guideline 2.1" · "Check the project against the Review Guidelines before I submit"
+
+**apple-bug-flow-review** — "Find bugs before I ship" · "Do a QA pass on the app" · "Why does it crash / lose my data / freeze?" · "Check that the user flows actually work" · "בדוק באגים" · "בדיקת זרימת המשתמש"
 
 **apple-hig-design-review** — "Do a design review — does the UI feel native?" · "Check accessibility (VoiceOver / Dynamic Type)"
 

@@ -4,9 +4,9 @@
 והפצה ישירה), פלוס סקיל-אח ל-Google Play. מה כל אחד עושה, מי הבעלים של מה,
 התלויות ביניהם, ודוגמאות שימוש.
 
-עודכן: 2026-06-14 · מיקום הסקילים: `~/.claude/skills/` · **14 סקילים**
+עודכן: 2026-06-17 · מיקום הסקילים: `~/.claude/skills/` · **15 סקילים**
 
-> **זרימת סטודיו (BD TECH):** 14 הסקילים כאן הם **מכניקה גנרית** (ידע אפל/גוגל) ופועלים בכל פרויקט.
+> **זרימת סטודיו (BD TECH):** 15 הסקילים כאן הם **מכניקה גנרית** (ידע אפל/גוגל) ופועלים בכל פרויקט.
 > ב-BD TECH הם מונעים משכבת ה-Hub: מקור האמת לכל קופי הוא הפרופיל (`<slug>/profile.md`), הקופי
 > **מורם** ממנו (לא מומצא), והמדיה (`appstore-media`) נכתבת אל ה-Hub. לתזמור מקצה-לקצה
 > (פרופיל → מדיה → חנויות → אתר → שליחה), שכבת ה-Hub, ואיפה כל סקיל רץ — ראה
@@ -14,7 +14,7 @@
 
 ---
 
-## סקירה — 14 הסקילים (לפי תפקיד)
+## סקירה — 15 הסקילים (לפי תפקיד)
 
 **מתזמן**
 
@@ -34,6 +34,7 @@
 | סקיל | במשפט אחד |
 |------|-----------|
 | **app-store-review-compliance** | תאימות למדריך הביקורת של אפל (מונע דחיות) + demo mode לבודק |
+| **apple-bug-flow-review** | QA פונקציונלי: מאתר באגי לוגיקה/קוד + שברים בזרימת המשתמש (סריקה סטטית + analyzer + sanitizers + XCUITest) |
 | **apple-hig-design-review** | סקירת עיצוב/נגישות מול ה-HIG (המלצות מדורגות) |
 | **localization-i18n** | לוקליזציה בתוך האפליקציה: מחרוזות, טקסט קשיח, שלמות תרגום, RTL |
 
@@ -77,6 +78,7 @@
 | תעודות, יצירה, `.p12`, app-specific password, notary profile, API key | **apple-credentials** | code-signing, notarize-and-distribute, ship-apple-app, app-store-metadata, app-store-reviews-responder |
 | מודל חתימה, provisioning profiles, שגיאות חתימה, אבחון | **code-signing-provisioning** | ship-apple-app |
 | כללי ביקורת + demo mode לבודק + privacy manifest + entitlements מוצדקים | **app-store-review-compliance** | ship-apple-app, appstore-media (להבחנה בין שני סוגי ה-demo mode) |
+| באגי נכונות/חוסן + QA של זרימת המשתמש (האם זה עובד?) | **apple-bug-flow-review** | ship-apple-app (אופציונלי, לפני archive); מנצל את ה-demo mode וה-a11y IDs של appstore-media ל-smoke flows |
 | עיצוב/נגישות (HIG) | **apple-hig-design-review** | ship-apple-app (אופציונלי) |
 | לוקליזציה בתוך האפליקציה (מחרוזות, תרגום, RTL) | **localization-i18n** | ship-apple-app (לפני metadata) |
 | קובצי רשימת ה-App Store (טקסט + קבצי צילומי מסך) + העלאה ב-`deliver` | **app-store-metadata** | ship-apple-app; **מוזן** מ-appstore-media, apple-app-store-screenshots, aso-keywords |
@@ -93,6 +95,14 @@
 - **appstore-media** = **ייצור** (לכידה מהאפליקציה הרצה דרך XCUITest demo flow; גם סרטוני App Preview).
 - **apple-app-store-screenshots** = **התאמה** (תמונה אחת שכבר קיימת → גודל פיקסלים מדויק).
 - **app-store-metadata** = **ארגון/העלאה** (הכנסת הקבצים ל-`metadata/`, אימות מגבלות, `deliver`).
+
+### שלישיית האיכות (אל תבלבל בין שלושת סקילי ה"סקירה")
+שלושה סקילים סוקרים את האפליקציה לפני שחרור, כל אחד שאלה אחרת:
+- **apple-bug-flow-review** = **האם זה עובד / נכון?** (קריסות, races, leaks, אובדן נתונים, שברים בזרימה — QA פונקציונלי).
+- **app-store-review-compliance** = **האם אפל תאשר?** (כללי מדריך הביקורת — privacy strings, IAP, demo mode, entitlements).
+- **apple-hig-design-review** = **האם זה מרגיש נייטיב ונגיש?** (ליטוש עיצוב/UX/נגישות מול ה-HIG).
+
+חפיפה נפתרת לפי בעלות: UX שחוסם זרימה שייך ל-bug-flow; ליטוש אסתטי ל-HIG; כלל-דחייה ל-compliance; פרצת אבטחה נדחית לסקיל `security-review`.
 
 ### שכבת הסטודיו (Hub) — מאיפה מגיע הקופי
 ב**זרימת BD TECH** ה-workers של החנויות מונעים משכבת ה-Hub, ומקור הקופי הוא הפרופיל — לא המצאה:
@@ -174,6 +184,8 @@ fastlane supply (העלאה) → השלמה ב-Play Console (Data safety, conten
 **code-signing-provisioning** — "קיבלתי 'Provisioning profile doesn't include signing certificate' — מה לעשות?" · "תאבחן את הגדרות החתימה בפרויקט"
 
 **app-store-review-compliance** — "למה אפל דחתה את האפליקציה? Guideline 2.1" · "תבדוק את הפרויקט מול מדריך הביקורת לפני שליחה"
+
+**apple-bug-flow-review** — "בדוק באגים לפני שליחה" · "תעשה QA על האפליקציה" · "למה זה קורס / מאבד נתונים / נתקע?" · "בדוק שזרימות המשתמש באמת עובדות" · "בדיקת זרימת המשתמש"
 
 **apple-hig-design-review** — "תעשה סקירת עיצוב — האם ה-UI מרגיש native?" · "תבדוק נגישות (VoiceOver / Dynamic Type)"
 
