@@ -4,9 +4,9 @@
 והפצה ישירה), פלוס סקיל-אח ל-Google Play. מה כל אחד עושה, מי הבעלים של מה,
 התלויות ביניהם, ודוגמאות שימוש.
 
-עודכן: 2026-06-17 · מיקום הסקילים: `~/.claude/skills/` · **15 סקילים**
+עודכן: 2026-06-17 · מיקום הסקילים: `~/.claude/skills/` · **16 סקילים**
 
-> **זרימת סטודיו (BD TECH):** 15 הסקילים כאן הם **מכניקה גנרית** (ידע אפל/גוגל) ופועלים בכל פרויקט.
+> **זרימת סטודיו (BD TECH):** 16 הסקילים כאן הם **מכניקה גנרית** (ידע אפל/גוגל) ופועלים בכל פרויקט.
 > ב-BD TECH הם מונעים משכבת ה-Hub: מקור האמת לכל קופי הוא הפרופיל (`<slug>/profile.md`), הקופי
 > **מורם** ממנו (לא מומצא), והמדיה (`appstore-media`) נכתבת אל ה-Hub. לתזמור מקצה-לקצה
 > (פרופיל → מדיה → חנויות → אתר → שליחה), שכבת ה-Hub, ואיפה כל סקיל רץ — ראה
@@ -14,7 +14,7 @@
 
 ---
 
-## סקירה — 15 הסקילים (לפי תפקיד)
+## סקירה — 16 הסקילים (לפי תפקיד)
 
 **מתזמן**
 
@@ -37,6 +37,12 @@
 | **apple-bug-flow-review** | QA פונקציונלי: מאתר באגי לוגיקה/קוד + שברים בזרימת המשתמש (סריקה סטטית + analyzer + sanitizers + XCUITest) |
 | **apple-hig-design-review** | סקירת עיצוב/נגישות מול ה-HIG (המלצות מדורגות) |
 | **localization-i18n** | לוקליזציה בתוך האפליקציה: מחרוזות, טקסט קשיח, שלמות תרגום, RTL |
+
+**שם וזהות (מקור אמת)**
+
+| סקיל | במשפט אחד |
+|------|-----------|
+| **app-identity** | קובע את שם האפליקציה (תצוגה במכשיר + App Store + סאבטייטל) בשיח עם המפתח (לא לבד), כותב את שם-התצוגה ל-build/Info.plist, ובעלים של ה-README כמקור-אמת (זהות + רשימת פיצ'רים). רץ **מוקדם** — לפני metadata/media |
 
 **רשימה ונכסים (App Store)**
 
@@ -75,6 +81,7 @@
 
 | נושא | בעלים | מי שואב / מזין |
 |------|-------|----------------|
+| **שם תצוגה במכשיר** (PRODUCT_NAME/CFBundleDisplayName) + **בחירת** שם/סאבטייטל לחנות + **README מקור-אמת** (זהות + רשימת פיצ'רים) | **app-identity** | app-store-metadata, aso-keywords, appstore-media, ו-app-profile (Hub) שואבים מה-README; רץ מוקדם, לפני metadata/media |
 | תעודות, יצירה, `.p12`, app-specific password, notary profile, API key | **apple-credentials** | code-signing, notarize-and-distribute, ship-apple-app, app-store-metadata, app-store-reviews-responder |
 | מודל חתימה, provisioning profiles, שגיאות חתימה, אבחון | **code-signing-provisioning** | ship-apple-app |
 | כללי ביקורת + demo mode לבודק + privacy manifest + entitlements מוצדקים | **app-store-review-compliance** | ship-apple-app, appstore-media (להבחנה בין שני סוגי ה-demo mode) |
@@ -106,7 +113,8 @@
 
 ### שכבת הסטודיו (Hub) — מאיפה מגיע הקופי
 ב**זרימת BD TECH** ה-workers של החנויות מונעים משכבת ה-Hub, ומקור הקופי הוא הפרופיל — לא המצאה:
-- `app-profile` `[Hub]` → `<slug>/profile.md` = מקור האמת לכל קופי.
+- `app-identity` `[בכל פרויקט]` → ה-`README.md` של הרפו = מקור-האמת לזהות (שם תצוגה/חנות/סאבטייטל) ולרשימת הפיצ'רים. רץ **לפני** `app-profile`.
+- `app-profile` `[Hub]` → `<slug>/profile.md` = מקור האמת לכל קופי; **שואב מה-README** של `app-identity` (שמות + דירוג פיצ'רים) ואז מעשיר בקוד + מחקר שוק.
 - `store-metadata-writer` `[Hub]` → מרים את הקופי מהפרופיל ומריץ את `app-store-metadata` /
   `play-store-metadata` / `aso-keywords` (הם הבעלים של הקבצים / האימות / ה-ASO — **לא** של חיבור הקופי).
 - `add-app-to-site` `[bd-tech]` → האתר.
@@ -134,7 +142,16 @@ apple-creds  code-sign  compliance hig  localization-i18n  app-store-metadata
 notarize-and-distribute   ← מסלול נפרד: הפצה ישירה (DMG), לא App Store
 app-store-reviews-responder ← אחרי שחרור (שואב API key מ-apple-credentials)
 app-icon-generator   ← עצמאי, ללא תלויות
-play-store-metadata  ← מקביל ל-app-store-metadata, אבל ל-Google Play (אנדרואיד)
+```
+
+**מקור האמת — `app-identity` קובע שם וכותב README; סקילי הרשימה/מדיה שואבים ממנו:**
+
+```
+app-identity  ─▶  README.md  ─┬─▶  aso-keywords        (שם/סאבטייטל → מילות מפתח)
+(רץ מוקדם —   (זהות +      ├─▶  app-store-metadata   (name / subtitle / description)
+ לפני          פיצ'רים     ├─▶  appstore-media       (screen story / captions)
+ metadata)     מדורגים)    └─▶  app-profile [Hub] ─▶ profile.md ─▶ store-metadata-writer
+play-store-metadata  ← מקביל ל-app-store-metadata; בקרוס-פלטפורם שואב מאותו README
 ```
 
 עקרון ה-fallback: אם סקיל שואב לא מוצא את הבעלים (למשל `apple-credentials` לא
@@ -152,7 +169,8 @@ ship-apple-app מתזמן:
 3. תאימות        → app-store-review-compliance
 4. עיצוב         → apple-hig-design-review (אופציונלי)
 5. לוקליזציה     → localization-i18n (אם ה-UI לא מתורגם במלואו)
-6. נכסים+רשימה   → aso-keywords (מילות מפתח) → appstore-media (ייצור צילומי מסך/סרטונים)
+6. שם+נכסים+רשימה → app-identity (שם תצוגה ב-build/Info.plist + בחירת שם/סאבטייטל + README מקור-אמת)
+                   → aso-keywords (מילות מפתח) → appstore-media (ייצור צילומי מסך/סרטונים)
                    → apple-app-store-screenshots (התאמת תמונה בודדת) → app-store-metadata
                    (ארגון+אימות+deliver) → app-icon-generator (אייקון)
 7. build/archive/upload
@@ -190,6 +208,8 @@ fastlane supply (העלאה) → השלמה ב-Play Console (Data safety, conten
 **apple-hig-design-review** — "תעשה סקירת עיצוב — האם ה-UI מרגיש native?" · "תבדוק נגישות (VoiceOver / Dynamic Type)"
 
 **localization-i18n** — "תוסיף תמיכה בעברית לאפליקציה" · "תמצא מחרוזות קשיחות שלא עברו לוקליזציה" · "האם כל השפות שלמות?"
+
+**app-identity** — "איך לקרוא לאפליקציה?" · "תשנה את השם שמופיע מתחת לאייקון / בשורת התפריטים" · "תעדכן את שם ה-App Store והסאבטייטל" · "תכתוב/תרענן את ה-README ורשימת הפיצ'רים"
 
 **app-store-metadata** — "תכין מטא-דאטה ל-App Store בעברית ואנגלית" · "תאמת שכל הטקסטים בתוך מגבלות התווים"
 

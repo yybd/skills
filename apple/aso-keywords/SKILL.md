@@ -28,7 +28,10 @@ them for ASO, and proposes better content; metadata applies the changes.
 > and the keyword *intent* is the app's own vocabulary already in the profile —
 > lift and optimize from there rather than inventing a separate brand voice. This
 > skill owns the **keyword strategy and the 100-char field**; `app-store-metadata`
-> owns the files. Standalone (no profile), gather terms with the user as below.
+> owns the files. Standalone (no profile), the app's `README.md` (written by the
+> `app-identity` skill) holds the chosen **name** and **subtitle** to optimize and the
+> feature vocabulary to mine for terms — start there, then gather any missing terms
+> with the user as below.
 
 ## What this can and can't do
 - ✅ **On-page ASO hygiene & structure** (fully here): field length usage,

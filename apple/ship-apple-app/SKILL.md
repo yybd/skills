@@ -39,6 +39,7 @@ produce it, then come back and re-verify. This skill owns only the ship itself
 | Area | Verify it's ready | Owned/produced by |
 |------|-------------------|-------------------|
 | **App record + bundle ID** | the bundle ID is registered (portal) and the app record exists in App Store Connect | one-time portal/ASC setup |
+| **App name & identity** | the on-device display name is set, and the listing **name**/**subtitle** are decided and consistent with it (the README identity block matches the build settings) | `app-identity` (decides the names early + owns the README source of truth) |
 | **Signing** | Apple Distribution cert + profile present; MAS build is sandboxed + Hardened Runtime | `apple-credentials` (certs/credentials) · `code-signing-provisioning` (config/errors) |
 | **Compliance** | no blockers — run the build-time checklist | `app-store-review-compliance` |
 | **Listing metadata** | every locale present and within Apple's limits (run the validator) | `app-store-metadata` (the listing copy may be authored upstream — e.g. from an app profile — this skill only checks it's present & valid) |
@@ -85,6 +86,7 @@ Guide the user through each, with exact navigation:
   — navigation-level steps for the portal + App Store Connect website parts.
 
 ## Related skills (they produce; this skill verifies + ships)
+- `app-identity` — decides the app name/subtitle early and owns the README source of truth (verify the on-device name and listing name/subtitle are set & consistent).
 - `apple-credentials` · `code-signing-provisioning` — signing/credentials (verify ready).
 - `app-store-review-compliance` — compliance (verify it passes).
 - `app-store-metadata` — listing metadata files + `deliver` upload (verify present/valid).

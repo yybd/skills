@@ -31,8 +31,11 @@ inventing claims. Confirm before installing tools or uploading.
 > lifted from the app's profile (`~/Developer/app-hub/<slug>/profile.md`) by the
 > `store-metadata-writer` skill, which drives this one; so when a profile exists,
 > take the copy from there (or let `store-metadata-writer` orchestrate) instead of
-> re-authoring it here. Standalone (no profile), write the fields with the user as
-> below. Either way, never fabricate claims.
+> re-authoring it here. Standalone (no profile), the app's `README.md` — written and
+> owned by the `app-identity` skill — is the source of truth: take the **App name** and
+> **Subtitle** from its identity block and base the **description** on its ranked
+> feature list, rather than re-authoring. Only if there's no README either, write the
+> fields with the user as below. Either way, never fabricate claims.
 
 ## Workflow
 
@@ -85,9 +88,12 @@ Scaffold the per-locale structure (won't overwrite existing content):
 python3 ~/.claude/skills/app-store-metadata/scripts/scaffold_metadata.py <metadata-root> --locales en-US,de-DE,he
 ```
 Then fill the fields. In the BD TECH studio flow the wording comes from the
-profile (via `store-metadata-writer`); standalone, write the base language with
-the user, then translate to the others — keeping each field within its limit (the
-translated string, not the source, must fit). The 100-char **keywords** field is
+profile (via `store-metadata-writer`); standalone, take **App name** / **Subtitle**
+from the app's `README.md` (the `app-identity` skill's source of truth) and base the
+description on its feature list — or write the base language with the user if
+there's no README — then translate to the others, keeping each field within its
+limit (the translated string, not the source, must fit). The 100-char **keywords**
+field is
 an ASO decision owned by the `aso-keywords` skill — this skill just stores and
 validates it. Field list, limits, and which files are per-locale vs shared are in
 [references/metadata-spec.md](references/metadata-spec.md).

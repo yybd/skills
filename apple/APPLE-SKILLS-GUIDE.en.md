@@ -5,9 +5,9 @@ macOS/iOS (App Store and direct distribution), plus a sibling for Google Play.
 What each one does, who owns what, the dependencies between them, and usage
 examples.
 
-Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **15 skills**
+Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **16 skills**
 
-> **BD TECH studio flow:** the 15 skills here are **generic mechanics** (Apple/Google knowledge) and
+> **BD TECH studio flow:** the 16 skills here are **generic mechanics** (Apple/Google knowledge) and
 > work in any project. Inside BD TECH they are driven by the Hub layer: the source of truth for all
 > copy is the app's profile (`<slug>/profile.md`), copy is **lifted** from it (never invented), and
 > media (`appstore-media`) is written into the Hub. For the end-to-end orchestration
@@ -16,7 +16,7 @@ Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **15 skills**
 
 ---
 
-## Overview — the 15 skills (by role)
+## Overview — the 16 skills (by role)
 
 **Orchestrator**
 
@@ -39,6 +39,12 @@ Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **15 skills**
 | **apple-bug-flow-review** | Functional QA: finds logic/code bugs + broken user flows (static scan + analyzer + sanitizers + XCUITest) |
 | **apple-hig-design-review** | Design/accessibility review vs the HIG (prioritized recommendations) |
 | **localization-i18n** | In-app localization: strings, hardcoded text, translation completeness, RTL |
+
+**Name & identity (source of truth)**
+
+| Skill | One-liner |
+|-------|-----------|
+| **app-identity** | Decides the app's name (on-device display + App Store + subtitle) in discussion with the developer (never alone), writes the display name into build/Info.plist, and owns the README as the source of truth (identity + ranked feature list). Runs **early** — before metadata/media |
 
 **Listing & assets (App Store)**
 
@@ -78,6 +84,7 @@ guidance).
 
 | Topic | Owner | Who draws / feeds |
 |-------|-------|-------------------|
+| **On-device display name** (PRODUCT_NAME/CFBundleDisplayName) + **deciding** the store name/subtitle + **README source of truth** (identity + ranked feature list) | **app-identity** | app-store-metadata, aso-keywords, appstore-media, and app-profile (Hub) draw from the README; runs early, before metadata/media |
 | Certificates, creation, `.p12`, app-specific password, notary profile, API key | **apple-credentials** | code-signing, notarize-and-distribute, ship-apple-app, app-store-metadata, app-store-reviews-responder |
 | Signing model, provisioning profiles, signing errors, diagnosis | **code-signing-provisioning** | ship-apple-app |
 | Review rules + reviewer demo mode + privacy manifest + justified entitlements | **app-store-review-compliance** | ship-apple-app, appstore-media (to distinguish the two demo modes) |
@@ -109,7 +116,8 @@ Overlaps resolve by ownership: a flow-blocking UX bug is bug-flow's; aesthetic p
 
 ### The studio layer (Hub) — where the copy comes from
 In the **BD TECH studio flow** the store workers are driven by the Hub layer, and the source of copy is the profile — never invented:
-- `app-profile` `[Hub]` → `<slug>/profile.md` = the source of truth for all copy.
+- `app-identity` `[any project]` → the repo's `README.md` = the source of truth for identity (display/store name, subtitle) and the ranked feature list. Runs **before** `app-profile`.
+- `app-profile` `[Hub]` → `<slug>/profile.md` = the source of truth for all copy; **draws from `app-identity`'s README** (names + feature ranking), then enriches with code + market research.
 - `store-metadata-writer` `[Hub]` → lifts the copy from the profile and runs `app-store-metadata` /
   `play-store-metadata` / `aso-keywords` (they own the files / validation / ASO — **not** copy authorship).
 - `add-app-to-site` `[bd-tech]` → the website.
@@ -138,7 +146,16 @@ apple-creds  code-sign  compliance hig  localization-i18n  app-store-metadata
 notarize-and-distribute   ← separate path: direct distribution (DMG), not App Store
 app-store-reviews-responder ← post-launch (draws API key from apple-credentials)
 app-icon-generator   ← standalone, no dependencies
-play-store-metadata  ← parallel to app-store-metadata, but for Google Play (Android)
+```
+
+**Source of truth — `app-identity` decides the name and writes the README; the listing/media skills draw from it:**
+
+```
+app-identity  ─▶  README.md  ─┬─▶  aso-keywords        (name/subtitle → keywords)
+(runs early — (identity +  ├─▶  app-store-metadata   (name / subtitle / description)
+ before        ranked       ├─▶  appstore-media       (screen story / captions)
+ metadata)     features)    └─▶  app-profile [Hub] ─▶ profile.md ─▶ store-metadata-writer
+play-store-metadata  ← parallel to app-store-metadata; cross-platform, draws from the same README
 ```
 
 Fallback principle: if a drawing skill can't find the owner (e.g.
@@ -157,7 +174,8 @@ ship-apple-app orchestrates:
 3. Compliance    → app-store-review-compliance
 4. Design        → apple-hig-design-review (optional)
 5. Localization  → localization-i18n (if the UI isn't fully translated)
-6. Assets+listing → aso-keywords (keywords) → appstore-media (produce screenshots/videos)
+6. Name+assets+listing → app-identity (display name in build/Info.plist + decide store name/subtitle + README source of truth)
+                   → aso-keywords (keywords) → appstore-media (produce screenshots/videos)
                    → apple-app-store-screenshots (conform a single image) → app-store-metadata
                    (organize+validate+deliver) → app-icon-generator (icon)
 7. build / archive / upload
@@ -195,6 +213,8 @@ fastlane supply (upload) → finish on Play Console (Data safety, content rating
 **apple-hig-design-review** — "Do a design review — does the UI feel native?" · "Check accessibility (VoiceOver / Dynamic Type)"
 
 **localization-i18n** — "Add Hebrew support to the app" · "Find hardcoded un-localized strings" · "Are all locales complete?"
+
+**app-identity** — "What should I call the app?" · "Change the name shown under the icon / in the menu bar" · "Update the App Store name and subtitle" · "Write/refresh the README and feature list"
 
 **app-store-metadata** — "Prepare App Store metadata in Hebrew and English" · "Validate everything is within the character limits"
 
