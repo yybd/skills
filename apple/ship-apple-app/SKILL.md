@@ -42,7 +42,7 @@ produce it, then come back and re-verify. This skill owns only the ship itself
 | **App name & identity** | the on-device display name is set, and the listing **name**/**subtitle** are decided and consistent with it (the README identity block matches the build settings) | `app-identity` (decides the names early + owns the README source of truth) |
 | **Signing** | Apple Distribution cert + profile present; MAS build is sandboxed + Hardened Runtime | `apple-credentials` (certs/credentials) · `code-signing-provisioning` (config/errors) |
 | **Compliance** | no blockers — run the build-time checklist | `app-store-review-compliance` |
-| **Listing metadata** | every locale present and within Apple's limits (run the validator) | `app-store-metadata` (the listing copy may be authored upstream — e.g. from an app profile — this skill only checks it's present & valid) |
+| **Listing metadata + IAP** | every locale present and within Apple's limits (run the validator); IAP localizations + reviewer screenshot present | `app-store-metadata` authors/validates it (SoT in the hub `~/Developer/app-hub/<slug>/store/apple/`); **`app-store-deliver`** syncs it into `fastlane/` and uploads it (listing + screenshots + IAP) at send. Verify in the hub |
 | **Screenshots** | exact sizes for every required device class, all locales — for BD TECH apps the source media lives in the hub at `~/Developer/app-hub/<slug>/media/apple/` | `appstore-media` (capture) · `apple-app-store-screenshots` (conform) |
 | **In-app localization** | UI fully localized if shipping multi-locale | `localization-i18n` |
 | **Design** (optional) | no high-impact accessibility/HIG issues | `apple-hig-design-review` |
@@ -57,8 +57,17 @@ owning skill above, then return here.
 ## Upload  [local]
 - Upload the binary (Xcode Organizer, Transporter, or `fastlane deliver`/`pilot` for
   TestFlight). Processing takes minutes — wait for it before selecting the build.
-- Upload the verified metadata/screenshots via the metadata skill's `deliver` lane if
-  not already uploaded (`--verify_only`/precheck first).
+- Upload the verified metadata/screenshots/**IAP** by **triggering the
+  `app-store-deliver` skill** (the single send-surface) — don't deliver from here
+  yourself. In the **hub flow** it syncs the hub tree → `fastlane/` at send time
+  (not during authoring), uploads listing + screenshots + IAP via the official ASC
+  API, and authenticates with the `.p8` from the hub `DATA.md`. Authoring the metadata
+  into the hub is a separate, earlier task (`store-metadata-writer` → the metadata
+  workers) — it doesn't sync or upload.
+- **`app-store-deliver` verifies completeness and gates the upload.** If its
+  `sync_from_hub.sh` reports missing data and exits non-zero, **stop — nothing is
+  delivered.** It names the missing locale + field; hand off to `store-metadata-writer`
+  to fill the hub, then re-trigger `app-store-deliver`.
 
 ## Finish on the App Store Connect website  [website — fastlane can't]
 Guide the user through each, with exact navigation:
@@ -87,6 +96,7 @@ Guide the user through each, with exact navigation:
 
 ## Related skills (they produce; this skill verifies + ships)
 - `app-identity` — decides the app name/subtitle early and owns the README source of truth (verify the on-device name and listing name/subtitle are set & consistent).
+- `app-store-deliver` — the single send-surface this skill **triggers** to upload listing + screenshots + IAP (ASC API); it syncs from the hub and verify-gates the upload.
 - `apple-credentials` · `code-signing-provisioning` — signing/credentials (verify ready).
 - `app-store-review-compliance` — compliance (verify it passes).
 - `app-store-metadata` — listing metadata files + `deliver` upload (verify present/valid).

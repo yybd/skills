@@ -5,24 +5,27 @@ description: >-
   Android app using fastlane supply — localized text (title, short description,
   full description, release notes / changelogs, promo video URL) and the store
   graphics (512×512 icon, 1024×500 feature graphic, phone & tablet screenshots),
-  per locale under fastlane/metadata/android/. Use this whenever the user wants
-  to prepare, write, translate, fix, or upload Google Play / Play Console listing
-  text or graphics, set up fastlane supply, manage multi-language Play listings,
-  improve Play store discoverability / ASO, or get assets into Play's required
-  sizes. It scaffolds the per-locale file tree, validates against Google's
-  character limits and required fields, folds in Play ASO (Play has no keywords
-  field, so discoverability lives in the visible text), and tells the user
-  exactly which steps must be done on the Play Console website (Data safety form,
-  content rating, pricing) because supply can't.
+  per locale under the hub store tree (or fastlane/metadata/android/ when
+  standalone). Use this whenever the user wants to prepare, write, translate, fix,
+  or validate Google Play / Play Console listing text or graphics, set up the
+  fastlane supply structure, manage multi-language Play listings, improve Play
+  store discoverability / ASO, or get assets into Play's required sizes. It
+  scaffolds the per-locale file tree, validates against Google's character limits
+  and required fields, folds in Play ASO (Play has no keywords field, so
+  discoverability lives in the visible text), and tells the user which steps are
+  Play-Console-only. It does NOT upload — the actual `supply` delivery to Google
+  Play is the play-store-deliver skill; this skill authors and validates the
+  content it sends.
 ---
 
 # Google Play Store Metadata (fastlane supply)
 
 Getting a Play listing published means every localized field is present, within
 Google's character limits, and consistent across languages — and that the things
-fastlane *can't* upload (the Data safety form, the content-rating questionnaire,
-pricing) get done on the Play Console website. This skill manages the local
-metadata via fastlane `supply` and hands off the rest with clear instructions.
+that can't be set programmatically (the Data safety form, the content-rating
+questionnaire, pricing) get done on the Play Console website. This skill **authors
+and validates** that metadata; the actual `supply` upload is the
+**`play-store-deliver`** skill.
 
 Guide the user — don't just generate files. Listing copy is a product/marketing
 decision; ask for the positioning and translate intent faithfully rather than
@@ -40,6 +43,21 @@ inventing claims. Confirm before installing tools or uploading.
 > — to keep Play consistent with the App Store. For an Android-only project (no
 > README), write the copy with the user. Either way, adapt per store (Play has no
 > keywords field — see step 7).
+
+## Where the canonical metadata lives (hub vs repo)
+
+- **BD TECH (hub) flow — the source of truth is the hub:**
+  `~/Developer/app-hub/<slug>/store/play/metadata/<locale>/…`, with changelogs by
+  `versionCode` at `<slug>/store/play/changelogs/<versionCode>.txt` and graphics
+  under `<slug>/media/play/`. Scaffold, write, and validate **there**. Default URLs
+  come from the hub `DATA.md` (the Play service-account key goes there too, under
+  "key fastlane playstore", when present).
+- **Standalone flow (no hub)** — author directly in the app repo's
+  `fastlane/metadata/android/<locale>/…`.
+
+This skill **authors + validates** the content; it does **not** upload. The delivery
+to Google Play — sync hub → `fastlane/`, the `supply` upload — is the
+**`play-store-deliver`** skill. Hand off to it once the content is authored and validated.
 
 ## Workflow
 
@@ -93,6 +111,10 @@ content):
 ```bash
 python3 ~/.claude/skills/play-store-metadata/scripts/scaffold_metadata.py <project-root> --locales en-US,de-DE,iw-IL
 ```
+In the BD TECH flow, scaffold and validate against the **hub** store path
+`~/Developer/app-hub/<slug>/store/play` (the source of truth); standalone, against
+the repo's `fastlane/` as above.
+
 Then fill the fields. In the BD TECH studio flow the wording comes from the
 profile (via `store-metadata-writer`); standalone, take the shared copy from the
 app's `README.md` (the `app-identity` skill's source of truth) when it also ships on
@@ -112,6 +134,14 @@ fit). Field list, limits, and which files are per-locale vs shared are in
 There is **no** iOS-snapshot-style capture automation. Capture manually, or use
 `fastlane screengrab` for an instrumented app. Sizes and the full asset list are
 in [references/metadata-spec.md](references/metadata-spec.md#graphics).
+
+### 5b. In-app products / subscriptions — author into the hub
+If the app sells Play in-app products, **this skill authors their metadata** (the
+deliver skill only syncs + uploads). Write each into the hub at
+`<slug>/store/play/iap/<product-id>/` (`<locale>/title.txt` + `<locale>/description.txt`,
+`price.txt`, type). Lift the copy from the profile/README — don't invent. Play
+**managed products / subscriptions** are delivered by **`play-store-deliver`** via the
+Play Developer API (AndroidPublisher v3), not `supply` — author them here, it uploads them.
 
 ### 6. Validate against Google's requirements
 Always validate before uploading — over-limit fields, a missing feature graphic,
@@ -135,24 +165,26 @@ Write for humans — Google penalises keyword stuffing and repetition and can
 reject the listing. Detail in
 [references/metadata-spec.md](references/metadata-spec.md#aso-on-google-play-there-is-no-keywords-field).
 
-### 8. Upload what supply can; hand off the rest
-- Upload with `fastlane supply` (metadata-only: `--skip_upload_apk true
-  --skip_upload_aab true`; run with `--validate_only true` first). Control
-  graphics with `--skip_upload_images` / `--skip_upload_screenshots`. Commands in
-  [references/metadata-spec.md](references/metadata-spec.md#fastlane-supply-setup).
-- Then tell the user exactly what to finish on the **Play Console website**,
-  because supply can't: the **Data safety** form, the **content rating (IARC)**
-  questionnaire, **pricing & countries**, app-content declarations, and creating
-  the app entry if it doesn't exist. The website-only list is in
-  [references/metadata-spec.md](references/metadata-spec.md#done-on-the-play-console-website).
+### 8. Hand off to `play-store-deliver` (this skill does not upload)
+Authoring ends at validation. **Uploading is a separate skill** — once the hub
+content is written and the validator is clean, hand off to **`play-store-deliver`**,
+the single Play send-surface: it syncs the hub tree down into
+`fastlane/metadata/android/`, re-verifies completeness (blocking on any missing
+field), and uploads via `fastlane supply` (Google Play Developer API, service-account
+key from the hub `DATA.md`). Tell the user that's the next step; don't run `supply`
+from here.
+
+The Play-Console-only leftovers (Data safety form, content rating (IARC), pricing &
+countries, app-content declarations, creating the app entry) are listed in
+[references/metadata-spec.md](references/metadata-spec.md#done-on-the-play-console-website)
+and are completed during `play-store-deliver`.
 
 ## What's safe to do vs ask first
 **Safe:** scaffolding the folder structure, drafting/cleaning field text within
 limits, validating, fixing over-limit strings (with the user's wording), resizing
 graphics.
-**Ask first:** installing fastlane/gems, **uploading** to Google Play
-(outward-facing), overwriting existing human-written copy, and anything that
-publishes to the public listing.
+**Ask first:** installing fastlane/gems, overwriting existing human-written copy.
+(Uploading is `play-store-deliver`'s concern, not this skill's.)
 
 ## Reference files
 - [references/metadata-spec.md](references/metadata-spec.md) — fields, limits,
@@ -162,3 +194,5 @@ publishes to the public listing.
   per-locale file tree (non-destructive).
 - [scripts/validate_metadata.py](scripts/validate_metadata.py) — validate against
   Google's limits and required fields.
+
+(The hub→repo sync + the `supply` upload now live in the `play-store-deliver` skill.)

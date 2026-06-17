@@ -5,9 +5,9 @@ macOS/iOS (App Store and direct distribution), plus a sibling for Google Play.
 What each one does, who owns what, the dependencies between them, and usage
 examples.
 
-Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **16 skills**
+Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **18 skills**
 
-> **BD TECH studio flow:** the 16 skills here are **generic mechanics** (Apple/Google knowledge) and
+> **BD TECH studio flow:** the 18 skills here are **generic mechanics** (Apple/Google knowledge) and
 > work in any project. Inside BD TECH they are driven by the Hub layer: the source of truth for all
 > copy is the app's profile (`<slug>/profile.md`), copy is **lifted** from it (never invented), and
 > media (`appstore-media`) is written into the Hub. For the end-to-end orchestration
@@ -16,7 +16,7 @@ Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **16 skills**
 
 ---
 
-## Overview — the 16 skills (by role)
+## Overview — the 18 skills (by role)
 
 **Orchestrator**
 
@@ -56,6 +56,13 @@ Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **16 skills**
 | **app-icon-generator** | Generate an AppIcon set for all platforms from one image |
 | **aso-keywords** | Optimize the name/subtitle/keywords for search discoverability |
 
+**Deliver (the single send-surface)**
+
+| Skill | One-liner |
+|-------|-----------|
+| **app-store-deliver** | The single App Store Connect send-surface: syncs from the hub, verifies completeness, uploads metadata + screenshots + **IAP** via the official ASC API. Runs standalone (metadata/IAP push) or from `ship-apple-app` |
+| **play-store-deliver** | The Google Play counterpart: syncs from the hub, verifies, uploads via `supply` + in-app products/subscriptions via the Play Developer API |
+
 **Direct distribution (macOS, outside the App Store)**
 
 | Skill | One-liner |
@@ -91,20 +98,22 @@ guidance).
 | Correctness/robustness bugs + user-flow QA (does it work?) | **apple-bug-flow-review** | ship-apple-app (optional, pre-archive); reuses appstore-media's demo mode + a11y IDs for smoke flows |
 | Design/accessibility (HIG) | **apple-hig-design-review** | ship-apple-app (optional) |
 | In-app localization (strings, translation, RTL) | **localization-i18n** | ship-apple-app (before metadata) |
-| App Store listing files (text + screenshot files) + upload via `deliver` | **app-store-metadata** | ship-apple-app; **fed by** appstore-media, apple-app-store-screenshots, aso-keywords |
+| **Authoring + validating** App Store listing files (text + screenshots + **IAP/Pro**) — **no upload** | **app-store-metadata** | **fed by** appstore-media, apple-app-store-screenshots, aso-keywords; `app-store-deliver` syncs + uploads its output |
+| **Delivery to App Store Connect** (sync hub → ASC API: metadata + screenshots + IAP) | **app-store-deliver** | triggered by `ship-apple-app` or standalone; auth from `DATA.md` |
+| **Delivery to Google Play** (sync hub → `supply`) | **play-store-deliver** | the counterpart of app-store-deliver |
 | **Producing** screenshots + videos (demo-flow) | **appstore-media** | reads the profile; writes media to `<slug>/media/apple/` in the Hub (via `-o`); feeds app-store-metadata |
 | **Conforming** a single existing image to size | **apple-app-store-screenshots** | used by app-store-metadata, appstore-media |
 | Keywords / ASO (Apple) | **aso-keywords** | reads & feeds app-store-metadata |
 | Icons | **app-icon-generator** | standalone (used in ship phase 5) |
 | Direct distribution (DMG/notarize) | **notarize-and-distribute** | draws from apple-credentials |
 | User reviews + responses | **app-store-reviews-responder** | draws from apple-credentials (API key) |
-| Google Play listing (Android) | **play-store-metadata** | parallel sibling of app-store-metadata |
+| **Authoring + validating** Google Play listing (Android) — no upload | **play-store-metadata** | parallel sibling of app-store-metadata; `play-store-deliver` uploads |
 
 ### The screenshot trio (the most important distinction)
 Three skills touch screenshots — don't confuse them:
 - **appstore-media** = **produce** (capture from the running app via an XCUITest demo flow; also App Preview videos).
 - **apple-app-store-screenshots** = **conform** (one image that already exists → exact pixel size).
-- **app-store-metadata** = **organize/upload** (place files into `metadata/`, validate limits, `deliver`).
+- **app-store-metadata** = **organize/validate** (place files, validate limits); the upload (`deliver`) belongs to **app-store-deliver**.
 
 ### The quality trio (don't confuse the three "review" skills)
 Three skills review the app before shipping, each a different question:
@@ -118,14 +127,27 @@ Overlaps resolve by ownership: a flow-blocking UX bug is bug-flow's; aesthetic p
 In the **BD TECH studio flow** the store workers are driven by the Hub layer, and the source of copy is the profile — never invented:
 - `app-identity` `[any project]` → the repo's `README.md` = the source of truth for identity (display/store name, subtitle) and the ranked feature list. Runs **before** `app-profile`.
 - `app-profile` `[Hub]` → `<slug>/profile.md` = the source of truth for all copy; **draws from `app-identity`'s README** (names + feature ranking), then enriches with code + market research.
-- `store-metadata-writer` `[Hub]` → lifts the copy from the profile and runs `app-store-metadata` /
-  `play-store-metadata` / `aso-keywords` (they own the files / validation / ASO — **not** copy authorship).
+- `store-metadata-writer` `[Hub]` → lifts the copy from the profile and writes the multi-locale
+  metadata **into the Hub** under `<slug>/store/{apple,play}/metadata/` (the metadata SoT), including
+  release notes by version. Runs `app-store-metadata` / `play-store-metadata` / `aso-keywords` (file/validation/ASO owners).
 - `add-app-to-site` `[bd-tech]` → the website.
 - `appstore-media` → reads the profile and writes media to `<slug>/media/apple/` in the Hub.
 
+**Metadata: the Hub is the SoT, fastlane only syncs + uploads.** The multi-locale metadata,
+screenshots, and release notes (by version) live in the Hub under `<slug>/store/`. The app repo's
+`fastlane/` is a **generated artifact** — the deliver/supply skill runs `sync_from_hub.sh`
+(Hub → `fastlane/`) and then uploads, **every run**. The app repo keeps **only its `README.md`**
+(name + features, owned by `app-identity`). The sync also **verifies completeness**:
+on a missing field it reports the locale + field, points to `store-metadata-writer`
+to fill the hub, and **blocks the upload** (non-zero exit) — never ships partial data.
+
+**`DATA.md` (Hub root)** = studio-wide data: name/email/phone (review info), copyright, default
+URLs, and the App Store Connect **`.p8` path** (+ Issuer/Key ID). Skills read from it; they don't invent it.
+
 **Rule:** when a profile exists, don't author store copy from scratch in the workers — lift it from
-the profile (or let `store-metadata-writer` orchestrate). Standalone (no profile), the workers write
-with the user as usual. Full detail: `APP-LIFECYCLE.md`.
+the profile (or let `store-metadata-writer` orchestrate), and the metadata is written into the Hub.
+Standalone (no profile), the workers write with the user in the repo's `fastlane/` as usual. Full
+detail: `APP-LIFECYCLE.md`.
 
 ---
 
@@ -177,8 +199,8 @@ ship-apple-app orchestrates:
 6. Name+assets+listing → app-identity (display name in build/Info.plist + decide store name/subtitle + README source of truth)
                    → aso-keywords (keywords) → appstore-media (produce screenshots/videos)
                    → apple-app-store-screenshots (conform a single image) → app-store-metadata
-                   (organize+validate+deliver) → app-icon-generator (icon)
-7. build / archive / upload
+                   (author+validate into the hub) → app-icon-generator (icon)
+7. build / archive → **app-store-deliver** (sync hub → ASC API: metadata + screenshots + IAP) + upload the binary
 8. Finish on site → age rating, pricing, App Privacy
 9. submit
 ```
@@ -217,6 +239,10 @@ fastlane supply (upload) → finish on Play Console (Data safety, content rating
 **app-identity** — "What should I call the app?" · "Change the name shown under the icon / in the menu bar" · "Update the App Store name and subtitle" · "Write/refresh the README and feature list"
 
 **app-store-metadata** — "Prepare App Store metadata in Hebrew and English" · "Validate everything is within the character limits"
+
+**app-store-deliver** — "Upload the metadata to App Store Connect" · "Push a description fix without a new build" · "Update / submit the Pro (IAP) product with its reviewer screenshot"
+
+**play-store-deliver** — "Upload the listing to Google Play" · "Run supply for a text-only push"
 
 **appstore-media** — "Prepare App Store screenshots" · "I need an App Preview video" · "A demo flow that produces screenshots in every locale"
 

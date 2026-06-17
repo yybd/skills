@@ -46,6 +46,14 @@ re-interviewing or inventing. In the studio (BD TECH) flow that source of truth
 is `~/Developer/app-hub/<slug>/profile.md`; for a standalone project it is the
 repo's own `README.md`, and this skill owns it.
 
+**The README is the only listing artifact that stays in the app repo.** Everything
+else — the per-locale store metadata, the screenshots, and the release notes — lives
+in the **hub** (`~/Developer/app-hub/<slug>/store/` + `media/`, owned by
+`store-metadata-writer`) and is synced into `fastlane/` only at deliver time. So the
+repo holds the **identity** (app name + feature list, here); the hub holds the
+**listing**. Keep this README accurate and it stays the one thing a developer reads
+or edits in the repo to know what the app is.
+
 ## Where this sits in the flow
 
 ```

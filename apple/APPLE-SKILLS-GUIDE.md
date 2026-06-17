@@ -4,9 +4,9 @@
 והפצה ישירה), פלוס סקיל-אח ל-Google Play. מה כל אחד עושה, מי הבעלים של מה,
 התלויות ביניהם, ודוגמאות שימוש.
 
-עודכן: 2026-06-17 · מיקום הסקילים: `~/.claude/skills/` · **16 סקילים**
+עודכן: 2026-06-17 · מיקום הסקילים: `~/.claude/skills/` · **18 סקילים**
 
-> **זרימת סטודיו (BD TECH):** 16 הסקילים כאן הם **מכניקה גנרית** (ידע אפל/גוגל) ופועלים בכל פרויקט.
+> **זרימת סטודיו (BD TECH):** 18 הסקילים כאן הם **מכניקה גנרית** (ידע אפל/גוגל) ופועלים בכל פרויקט.
 > ב-BD TECH הם מונעים משכבת ה-Hub: מקור האמת לכל קופי הוא הפרופיל (`<slug>/profile.md`), הקופי
 > **מורם** ממנו (לא מומצא), והמדיה (`appstore-media`) נכתבת אל ה-Hub. לתזמור מקצה-לקצה
 > (פרופיל → מדיה → חנויות → אתר → שליחה), שכבת ה-Hub, ואיפה כל סקיל רץ — ראה
@@ -14,7 +14,7 @@
 
 ---
 
-## סקירה — 16 הסקילים (לפי תפקיד)
+## סקירה — 18 הסקילים (לפי תפקיד)
 
 **מתזמן**
 
@@ -54,6 +54,13 @@
 | **app-icon-generator** | יצירת AppIcon set לכל הפלטפורמות מתמונה אחת |
 | **aso-keywords** | אופטימיזציית name/subtitle/keywords לגילוי בחיפוש |
 
+**שליחה (Deliver — משטח שליחה יחיד)**
+
+| סקיל | במשפט אחד |
+|------|-----------|
+| **app-store-deliver** | משטח השליחה היחיד ל-App Store Connect: מסנכרן מה-Hub, מאמת שלמות, ומעלה metadata + צילומים + **IAP** דרך ה-ASC API הרשמי. רץ עצמאית (push של metadata/IAP) או מתוך `ship-apple-app` |
+| **play-store-deliver** | המקבילה ל-Google Play: מסנכרן מה-Hub, מאמת, ומעלה ב-`supply` + in-app products/מנויים דרך ה-Play Developer API |
+
 **הפצה ישירה (macOS, מחוץ ל-App Store)**
 
 | סקיל | במשפט אחד |
@@ -88,20 +95,22 @@
 | באגי נכונות/חוסן + QA של זרימת המשתמש (האם זה עובד?) | **apple-bug-flow-review** | ship-apple-app (אופציונלי, לפני archive); מנצל את ה-demo mode וה-a11y IDs של appstore-media ל-smoke flows |
 | עיצוב/נגישות (HIG) | **apple-hig-design-review** | ship-apple-app (אופציונלי) |
 | לוקליזציה בתוך האפליקציה (מחרוזות, תרגום, RTL) | **localization-i18n** | ship-apple-app (לפני metadata) |
-| קובצי רשימת ה-App Store (טקסט + קבצי צילומי מסך) + העלאה ב-`deliver` | **app-store-metadata** | ship-apple-app; **מוזן** מ-appstore-media, apple-app-store-screenshots, aso-keywords |
+| **כתיבת + אימות** קובצי רשימת ה-App Store (טקסט + צילומים + **IAP/Pro**) — **בלי העלאה** | **app-store-metadata** | **מוזן** מ-appstore-media, apple-app-store-screenshots, aso-keywords; ה-`app-store-deliver` מסנכרן ומעלה את הפלט |
+| **שליחה ל-App Store Connect** (sync מה-Hub → ASC API: metadata + צילומים + IAP) | **app-store-deliver** | מופעל ע"י `ship-apple-app` או עצמאית; auth מ-`DATA.md` |
+| **שליחה ל-Google Play** (sync מה-Hub → `supply`) | **play-store-deliver** | המקבילה ל-app-store-deliver |
 | **ייצור** צילומי מסך + סרטונים (demo-flow) | **appstore-media** | קורא את הפרופיל; כותב מדיה ל-`<slug>/media/apple/` ב-Hub (דרך `-o`); מזין את app-store-metadata |
 | **התאמת גודל** של תמונה בודדת קיימת | **apple-app-store-screenshots** | בשימוש app-store-metadata, appstore-media |
 | מילות מפתח / ASO (אפל) | **aso-keywords** | קורא וממזין את app-store-metadata |
 | אייקונים | **app-icon-generator** | עצמאי (בשימוש ב-ship phase 5) |
 | הפצה ישירה (DMG/notarize) | **notarize-and-distribute** | שואב מ-apple-credentials |
 | ביקורות משתמשים + תשובות | **app-store-reviews-responder** | שואב מ-apple-credentials (API key) |
-| רשימת Google Play (אנדרואיד) | **play-store-metadata** | אח מקביל ל-app-store-metadata |
+| **כתיבת+אימות** רשימת Google Play (אנדרואיד) — בלי העלאה | **play-store-metadata** | אח מקביל ל-app-store-metadata; ה-`play-store-deliver` מעלה |
 
 ### שלישיית צילומי המסך (החלוקה החשובה ביותר)
 שלושה סקילים נוגעים בצילומי מסך — אל תבלבל ביניהם:
 - **appstore-media** = **ייצור** (לכידה מהאפליקציה הרצה דרך XCUITest demo flow; גם סרטוני App Preview).
 - **apple-app-store-screenshots** = **התאמה** (תמונה אחת שכבר קיימת → גודל פיקסלים מדויק).
-- **app-store-metadata** = **ארגון/העלאה** (הכנסת הקבצים ל-`metadata/`, אימות מגבלות, `deliver`).
+- **app-store-metadata** = **ארגון/אימות** (הכנסת הקבצים, אימות מגבלות); ההעלאה (`deliver`) שייכת ל-**app-store-deliver**.
 
 ### שלישיית האיכות (אל תבלבל בין שלושת סקילי ה"סקירה")
 שלושה סקילים סוקרים את האפליקציה לפני שחרור, כל אחד שאלה אחרת:
@@ -115,13 +124,25 @@
 ב**זרימת BD TECH** ה-workers של החנויות מונעים משכבת ה-Hub, ומקור הקופי הוא הפרופיל — לא המצאה:
 - `app-identity` `[בכל פרויקט]` → ה-`README.md` של הרפו = מקור-האמת לזהות (שם תצוגה/חנות/סאבטייטל) ולרשימת הפיצ'רים. רץ **לפני** `app-profile`.
 - `app-profile` `[Hub]` → `<slug>/profile.md` = מקור האמת לכל קופי; **שואב מה-README** של `app-identity` (שמות + דירוג פיצ'רים) ואז מעשיר בקוד + מחקר שוק.
-- `store-metadata-writer` `[Hub]` → מרים את הקופי מהפרופיל ומריץ את `app-store-metadata` /
-  `play-store-metadata` / `aso-keywords` (הם הבעלים של הקבצים / האימות / ה-ASO — **לא** של חיבור הקופי).
+- `store-metadata-writer` `[Hub]` → מרים את הקופי מהפרופיל וכותב את המטא-דאטה הרב-לשונית
+  **ל-Hub** תחת `<slug>/store/{apple,play}/metadata/` (זה ה-SoT למטא-דאטה), כולל release notes
+  לפי גרסה. מריץ את `app-store-metadata` / `play-store-metadata` / `aso-keywords` (בעלי הקבצים/אימות/ASO).
 - `add-app-to-site` `[bd-tech]` → האתר.
 - `appstore-media` → קורא את הפרופיל וכותב מדיה ל-`<slug>/media/apple/` ב-Hub.
 
+**מטא-דאטה: ה-Hub הוא ה-SoT, fastlane רק מסנכרן ומעלה.** המטא-דאטה הרב-לשונית, צילומי המסך
+וה-release notes (לפי גרסה) חיים ב-Hub תחת `<slug>/store/`. תיקיית `fastlane/` בריפו האפליקציה
+היא **תוצר נגזר** — סקיל ה-deliver/supply מריץ `sync_from_hub.sh` (Hub → `fastlane/`) ואז מעלה,
+**בכל הרצה**. בריפו האפליקציה נשאר **רק ה-README** (שם + פיצ'רים, בניהול `app-identity`).
+ה-sync גם **מוודא שלמות**: אם חסרים שדות הוא מדווח (locale+שדה), מפנה ל-`store-metadata-writer`
+למילוי ה-Hub, ו**חוסם את ההעלאה** (יציאה ≠ 0) — לא מעלים נתונים חלקיים.
+
+**`DATA.md` (שורש ה-Hub)** = דאטה כלל-סטודיו: שם/מייל/טלפון (review info), copyright, כתובות URL
+ברירת-מחדל, ונתיב מפתח ה-`.p8` של App Store Connect (+ Issuer/Key ID). הסקילים שואבים משם, לא ממציאים.
+
 **כלל:** כשקיים פרופיל, אל תחבר קופי-חנות מאפס ב-workers — הרם מהפרופיל (או תן ל-`store-metadata-writer`
-לתזמר). בלי פרופיל (פרויקט עצמאי) ה-workers כותבים מול המשתמש כרגיל. פירוט מלא: `APP-LIFECYCLE.md`.
+לתזמר), והמטא-דאטה נכתבת ל-Hub. בלי פרופיל (פרויקט עצמאי) ה-workers כותבים מול המשתמש ב-`fastlane/`
+של הריפו כרגיל. פירוט מלא: `APP-LIFECYCLE.md`.
 
 ---
 
@@ -172,8 +193,8 @@ ship-apple-app מתזמן:
 6. שם+נכסים+רשימה → app-identity (שם תצוגה ב-build/Info.plist + בחירת שם/סאבטייטל + README מקור-אמת)
                    → aso-keywords (מילות מפתח) → appstore-media (ייצור צילומי מסך/סרטונים)
                    → apple-app-store-screenshots (התאמת תמונה בודדת) → app-store-metadata
-                   (ארגון+אימות+deliver) → app-icon-generator (אייקון)
-7. build/archive/upload
+                   (כתיבה+אימות ל-Hub) → app-icon-generator (אייקון)
+7. build/archive → **app-store-deliver** (sync מה-Hub → ASC API: metadata + צילומים + IAP) + העלאת הבינארי
 8. השלמה באתר    → age rating, pricing, App Privacy
 9. submit
 ```
@@ -212,6 +233,10 @@ fastlane supply (העלאה) → השלמה ב-Play Console (Data safety, conten
 **app-identity** — "איך לקרוא לאפליקציה?" · "תשנה את השם שמופיע מתחת לאייקון / בשורת התפריטים" · "תעדכן את שם ה-App Store והסאבטייטל" · "תכתוב/תרענן את ה-README ורשימת הפיצ'רים"
 
 **app-store-metadata** — "תכין מטא-דאטה ל-App Store בעברית ואנגלית" · "תאמת שכל הטקסטים בתוך מגבלות התווים"
+
+**app-store-deliver** — "תעלה את המטא-דאטה ל-App Store Connect" · "תדחוף תיקון תיאור בלי build חדש" · "תעדכן/תשלח את מוצר ה-Pro (IAP) עם צילום לבודק"
+
+**play-store-deliver** — "תעלה את הרשימה ל-Google Play" · "תריץ supply לדחיפת טקסט בלבד"
 
 **appstore-media** — "תכין צילומי מסך לאפליקציה" · "אני צריך סרטון App Preview" · "demo flow שמייצר צילומי מסך בכל השפות"
 
