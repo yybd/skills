@@ -14,6 +14,8 @@ description: >-
 
 # ASO Keywords & Discoverability
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 Most App Store traffic is search. The App Store indexes three fields together —
 **app name**, **subtitle**, and the **100-character keywords field** — and ranks
 on them. This skill helps the user use those fields well: no waste, no

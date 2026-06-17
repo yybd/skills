@@ -1,6 +1,6 @@
 # Marketing copy + editing plan
 
-This phase turns raw, spec-compliant captures into a product page that converts. Two deliverables, both written in Hebrew (with English copy variants inline): `captions.md` and `imovie-plan.md`.
+This phase turns raw, spec-compliant captures into a product page that converts. Two deliverables: `captions.md` (the on-screen captions, **per the app's target locale** — e.g. Hebrew + English) and `imovie-plan.md` (the editing plan, written in the **`conversational language`** from the hub `DATA.md`; currently `hebrew`).
 
 > **Source of truth: the profile.** For a BD TECH app the caption material — the hero feature, the ranked features, the honest differentiators (one-time purchase, local-first/privacy, offline, language support) — already lives in `~/Developer/app-hub/<slug>/profile.md` (its **Derived copy** + advantages), in the hub's `PRODUCT.md` voice. Lift from there and tighten to caption length; don't invent a parallel set of claims. The guidance below is *how* to shape that material into captions, not license to make up new ones.
 
@@ -71,7 +71,7 @@ File → Share → File: Resolution 1080p (Mac/landscape) or highest available, 
 
 ### Writing the plan for *this* app
 
-Don't emit the generic table — fill it with the user's actual beats, actual timestamps from the run, and captions consistent with `captions.md` (same wording for the same feature; the store page should feel like one voice). End `imovie-plan.md` with a short checklist in Hebrew: cut list → overlays → export → convert script → verify script → upload.
+Don't emit the generic table — fill it with the user's actual beats, actual timestamps from the run, and captions consistent with `captions.md` (same wording for the same feature; the store page should feel like one voice). End `imovie-plan.md` with a short checklist in the conversational language: cut list → overlays → export → convert script → verify script → upload.
 
 ## Part 3 — Marketing video (outside the App Store)
 

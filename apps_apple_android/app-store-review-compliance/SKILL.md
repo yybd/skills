@@ -16,6 +16,8 @@ description: >-
 
 # App Store Review Compliance
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 Apple rejects apps for a fairly predictable set of reasons. This skill scans an
 Xcode project, maps what it finds against the guidelines that actually cause
 rejections, reports the gaps with severities, and fixes the safe ones — so a

@@ -13,6 +13,8 @@ description: >-
 
 # Notarize & Distribute (Developer ID DMG)
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 For a Mac app distributed outside the App Store, Apple's Gatekeeper will block it
 unless it is signed with **Developer ID**, **notarized** by Apple, and the
 notarization ticket is **stapled**. Miss any step and users see "app is damaged"

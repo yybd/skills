@@ -30,6 +30,8 @@ description: >-
 
 # App Name & README (the app's identity, source of truth)
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 An app's name is not one string — it shows up under the icon, in the window
 title and menu bar, on the App Store listing, and in the subtitle right beneath
 it. These have different rules (the on-device display name is an Xcode build

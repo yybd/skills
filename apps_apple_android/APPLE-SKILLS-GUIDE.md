@@ -49,7 +49,7 @@
 | סקיל | במשפט אחד |
 |------|-----------|
 | **app-store-metadata** | בעלים של קובצי הרשימה: טקסט רב-לשוני + קבצי צילומי מסך, אימות, העלאה ב-`deliver` |
-| **appstore-media** | ייצור צילומי מסך + סרטוני App Preview מ-XCUITest demo flow |
+| **appstore-media** | תסריטאי + ייצור: כותב `media-script.md` (אסטרטגיה + storyboard) ואז מפיק צילומי מסך + סרטוני App Preview מ-XCUITest demo flow |
 | **apple-app-store-screenshots** | התאמת תמונה בודדת קיימת לגודל פיקסלים מדויק |
 | **app-icon-generator** | יצירת AppIcon set לכל הפלטפורמות מתמונה אחת |
 | **aso-keywords** | אופטימיזציית name/subtitle/keywords לגילוי בחיפוש |
@@ -138,7 +138,8 @@
 למילוי ה-Hub, ו**חוסם את ההעלאה** (יציאה ≠ 0) — לא מעלים נתונים חלקיים.
 
 **`DATA.md` (שורש ה-Hub)** = דאטה כלל-סטודיו: שם/מייל/טלפון (review info), copyright, כתובות URL
-ברירת-מחדל, ונתיב מפתח ה-`.p8` של App Store Connect (+ Issuer/Key ID). הסקילים שואבים משם, לא ממציאים.
+ברירת-מחדל, נתיב מפתח ה-`.p8` של App Store Connect (+ Issuer/Key ID), ו-**`conversational language`**
+(השפה שבה כל הסקילים משוחחים עם המשתמש — כרגע `hebrew`). הסקילים שואבים משם, לא ממציאים.
 
 **כלל:** כשקיים פרופיל, אל תחבר קופי-חנות מאפס ב-workers — הרם מהפרופיל (או תן ל-`store-metadata-writer`
 לתזמר), והמטא-דאטה נכתבת ל-Hub. בלי פרופיל (פרויקט עצמאי) ה-workers כותבים מול המשתמש ב-`fastlane/`

@@ -16,6 +16,8 @@ description: >-
 
 # Apple Credentials & Certificates
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 This is the home for everything "identity material" in Apple development: the
 **certificates** that sign your apps, and the **credentials** that authenticate
 command-line tools to Apple. The goal is that the user understands *which* one

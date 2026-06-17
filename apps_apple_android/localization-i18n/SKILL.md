@@ -14,6 +14,8 @@ description: >-
 
 # Localization & i18n (in-app strings)
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 This is about the strings **inside the app** that users read — buttons, labels,
 messages — across languages. The goal: every user-facing string is localizable,
 every locale is complete, and nothing is hardcoded or left untranslated. (App

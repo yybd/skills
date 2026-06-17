@@ -15,6 +15,8 @@ description: >-
 
 # App Icon Generator
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 Apple needs the app icon at specific pixel sizes per platform, in the right
 format (square, sRGB PNG; no transparency for the App Store / iOS icon; macOS
 icons use padding + rounded corners), wired up in an `AppIcon` set inside an

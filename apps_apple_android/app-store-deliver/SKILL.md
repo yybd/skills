@@ -20,6 +20,8 @@ description: >-
 
 # App Store Deliver — the single send-surface (ASC API)
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 This skill is the **one place** that uploads to App Store Connect. Everything it
 sends is **already authored** in the hub source of truth (`<slug>/store/apple/…`
 + `media/apple/`) by `store-metadata-writer` and its workers — this skill does not

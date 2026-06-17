@@ -5,6 +5,8 @@ description: Convert any image into a screenshot that complies with Apple App St
 
 # Apple App Store screenshot formatter
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 This skill turns an arbitrary image into a PNG that meets Apple's App Store Connect screenshot specifications. App Review rejects screenshots that are not exactly one of the accepted sizes for the target device, so the goal is to produce a file with **the exact pixel dimensions Apple expects**, in PNG or JPG, RGB (no alpha), with the original content presented sensibly when the aspect ratios do not match.
 
 ## Conversation flow

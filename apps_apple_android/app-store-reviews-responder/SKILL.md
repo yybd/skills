@@ -13,6 +13,8 @@ description: >-
 
 # App Store Reviews Responder
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 After launch, reviews are the feedback loop and the public face of the app.
 This skill helps the user stay on top of them: pull recent reviews, see the
 rating trend and recurring complaints, and write professional, on-guideline

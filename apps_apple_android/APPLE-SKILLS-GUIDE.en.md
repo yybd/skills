@@ -51,7 +51,7 @@ Updated: 2026-06-17 · Skills location: `~/.claude/skills/` · **18 skills**
 | Skill | One-liner |
 |-------|-----------|
 | **app-store-metadata** | Owns the listing files: multi-language text + screenshot files, validation, upload via `deliver` |
-| **appstore-media** | Produce screenshots + App Preview videos from an XCUITest demo flow |
+| **appstore-media** | Scriptwriter + producer: writes `media-script.md` (strategy + storyboard), then produces screenshots + App Preview videos from an XCUITest demo flow |
 | **apple-app-store-screenshots** | Conform a single existing image to exact pixel dimensions |
 | **app-icon-generator** | Generate an AppIcon set for all platforms from one image |
 | **aso-keywords** | Optimize the name/subtitle/keywords for search discoverability |
@@ -142,7 +142,8 @@ on a missing field it reports the locale + field, points to `store-metadata-writ
 to fill the hub, and **blocks the upload** (non-zero exit) — never ships partial data.
 
 **`DATA.md` (Hub root)** = studio-wide data: name/email/phone (review info), copyright, default
-URLs, and the App Store Connect **`.p8` path** (+ Issuer/Key ID). Skills read from it; they don't invent it.
+URLs, the App Store Connect **`.p8` path** (+ Issuer/Key ID), and **`conversational language`**
+(the language every skill talks to the user in — currently `hebrew`). Skills read from it; they don't invent it.
 
 **Rule:** when a profile exists, don't author store copy from scratch in the workers — lift it from
 the profile (or let `store-metadata-writer` orchestrate), and the metadata is written into the Hub.

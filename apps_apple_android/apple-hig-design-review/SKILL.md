@@ -15,6 +15,8 @@ description: >-
 
 # Apple HIG Design Review
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 Apple's Human Interface Guidelines describe what makes an app feel native, clear
 and accessible on Apple platforms. Unlike the App Store *Review* Guidelines,
 HIG conformance is rarely binary and rarely a rejection basis on its own — it's

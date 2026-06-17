@@ -18,6 +18,8 @@ description: >-
 
 # App Store Metadata (fastlane)
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 Getting an app listing accepted means every localized field is present, within
 Apple's character limits, and consistent across languages — and that the things
 that can't be set programmatically (age rating, pricing, privacy questionnaire)

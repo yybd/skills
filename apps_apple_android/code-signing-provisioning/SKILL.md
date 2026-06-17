@@ -17,6 +17,8 @@ description: >-
 
 # Code Signing & Provisioning
 
+> **Conversational language:** talk to the user — questions, summaries, reports — in the `conversational language` set in the hub `DATA.md` (`~/Developer/app-hub/DATA.md`; currently `hebrew`); fall back to the language the user writes in if it is unset (e.g. a standalone project with no hub). This sets the *conversation* language only — content/deliverables follow the app's target locales.
+
 Signing is the most confusing part of Apple development because several
 certificates look alike but do different jobs, and the error messages are
 cryptic. This skill has two goals: **make the user understand the model** (so

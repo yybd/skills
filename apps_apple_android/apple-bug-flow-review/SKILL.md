@@ -34,9 +34,11 @@ can't complete, a leak that degrades the app over time. For each finding, give a
 **concrete repro** (or the exact code path) and a **fix**, and rank by user
 impact. Call out what's already solid — a credible review isn't all red.
 
-**Language**: The user is a Hebrew speaker. Write all conversation, findings,
-and the report in **Hebrew**. Write all code, identifiers, test names, and shell
-commands in **English**.
+**Language**: Write all conversation, findings, and the report in the
+**`conversational language`** set in the hub `DATA.md`
+(`~/Developer/app-hub/DATA.md`; currently `hebrew`) — fall back to the language the
+user writes in if it's unset (e.g. a standalone project with no hub). Write all
+code, identifiers, test names, and shell commands in **English**.
 
 The bug knowledge lives in [references/bug-catalog.md](references/bug-catalog.md)
 (what to look for, how to detect it, how to fix it). The flow-audit method and
@@ -209,7 +211,7 @@ Rank by user impact, not by ease of fix:
 
 ## Report structure
 
-ALWAYS use this template (write it in Hebrew):
+ALWAYS use this template (write it in the `conversational language` from the hub `DATA.md`):
 
 ```
 # Bug & Flow Review — <app name>
