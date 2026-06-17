@@ -65,14 +65,14 @@ HAS_AUDIO=$(ffprobe -v error -select_streams a -show_entries stream=codec_type -
 VF="scale=${TW}:${TH}:force_original_aspect_ratio=decrease,pad=${TW}:${TH}:(ow-iw)/2:(oh-ih)/2:black,fps=30,format=yuv420p"
 
 if [ -n "$HAS_AUDIO" ]; then
-  ffmpeg -y -i "$IN" "${TRIM[@]}" -vf "$VF" \
+  ffmpeg -y -i "$IN" ${TRIM[@]+"${TRIM[@]}"} -vf "$VF" \
     -c:v libx264 -profile:v high -level 4.0 -b:v 11M -maxrate 12M -bufsize 24M \
     -c:a aac -b:a 256k -ar 44100 -ac 2 \
     -movflags +faststart "$OUTFILE"
 else
   # Inject a silent stereo AAC track — App Store Connect validates the audio stream.
   ffmpeg -y -i "$IN" -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 \
-    "${TRIM[@]}" -vf "$VF" \
+    ${TRIM[@]+"${TRIM[@]}"} -vf "$VF" \
     -c:v libx264 -profile:v high -level 4.0 -b:v 11M -maxrate 12M -bufsize 24M \
     -c:a aac -b:a 256k -ar 44100 -ac 2 -shortest \
     -map 0:v:0 -map 1:a:0 \

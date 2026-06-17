@@ -98,6 +98,14 @@ if ProcessInfo.processInfo.arguments.contains("-CaptureMode") {
 
 - Menu bar actions: `app.menuBarItems["File"].menuItems["New"].click()`.
 - There is no status bar to clean, but hide the Dock/desktop clutter — `capture_mac.sh` captures only the window region, which solves most of it.
+- **Segmented `Picker` → radio buttons.** A SwiftUI `.pickerStyle(.segmented)` exposes its segments as `radioButtons` on macOS, not `buttons`. Query `app.radioButtons["Text"]` (fall back to `app.buttons[...]`).
+- **System Events can't drive SwiftUI.** AppleScript/`System Events` often sees an *empty* accessibility tree for SwiftUI apps, so don't drive the flow that way — XCUITest's element API works where System Events doesn't.
+- **Off-screen rows aren't hittable.** List rows below the fold report a zero-size frame and fail `click()` with "not hittable". Set `continueAfterFailure = true` and guard each optional tap with `element.waitForExistence(...)` + `element.isHittable`; prefer on-screen targets (or scroll first).
+- **Bundle the demo asset (sandbox + isolated HOME).** A sandboxed app launched by XCUITest gets an isolated HOME, so reading demo files from `~/...` fails (you get a placeholder). Load from `Bundle.main` and have the capture script copy the asset into the built `.app/Contents/Resources` before the run.
+
+### Recording the App Preview while the flow drives (macOS)
+- Run `capture_mac.sh -m video` (it has Screen Recording) and the XCUITest concurrently; the test launches/positions the app, the screencapture records the window region. The agent's own process usually lacks Screen Recording (TCC) — the recording runs in the **user's** terminal.
+- **Trim the tail.** When the flow ends, app teardown / a window resize can leak into the last 1–2 seconds of the recording. End the last beat on real UI and **trim ~2s before the flow ends** when encoding (e.g. `ffmpeg -t 28` on a ~30s take) so the preview closes cleanly on app content, not a resizing window.
 
 ## Running per locale
 

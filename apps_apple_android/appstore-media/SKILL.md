@@ -73,6 +73,15 @@ Three small code changes make the difference between amateur and professional ca
 1. **Demo mode**: a `-DemoMode` launch argument that seeds realistic, attractive content (well-written sample documents, sensible dates, populated lists — never empty states or "test test 123"). Demo content must exist in every target locale; Hebrew demo content should be real, natural Hebrew. (This is a *marketing-capture* demo mode. It's distinct from the *App Review* demo path owned by the `app-store-review-compliance` skill — that one exists to let a reviewer past a login/paywall. One launch argument can serve both, but the goals differ; don't conflate them.)
 2. **Accessibility identifiers** on every element the flow will touch (`.accessibilityIdentifier("newDocumentButton")`). Identifiers are language-independent, so one flow serves all locales.
 3. **(Optional but recommended) `-CaptureMode`**: hides badges/timestamps that look stale, disables animations or first-run popovers, and on macOS sets a fixed window size.
+4. **Bundle the demo source asset (sandboxed apps / macOS XCUITest).** A sandboxed app launched by XCUITest runs with an *isolated HOME*, so reading a demo image/file from an external path (e.g. `~/Developer/...` via `homeDirectoryForCurrentUser`) silently fails and you fall back to a placeholder. Load demo assets from `Bundle.main` and have the capture script copy the file into the built `.app/Contents/Resources` before launching. (An `open`-launched run may read the external path fine; the XCUITest-launched one won't — so bundle it.)
+
+**macOS relaunch caveat:** `open --args` does NOT re-apply launch arguments to an already-running app — it just activates it, so a new `-DemoScene`/flag is ignored. Between scenes/runs, terminate first with `pkill -x <AppName>` then `open -n … --args …`. `osascript -e 'quit app "X"'` needs Automation permission and can silently fail — prefer `pkill`.
+
+### Reviewer media (App Review, Guideline 2.1) — distinct from the marketing capture
+For features a reviewer cannot exercise, prepare reviewer media *in addition* to the listing media:
+- **IAP review screenshot (required):** App Store Connect requires a review screenshot for each in-app purchase. Capture the paywall in-app; to show the real price, run under **StoreKit Testing** (scheme → Run → StoreKit Configuration = your `.storekit`). Note: a demo mode that force-unlocks Pro must NOT short-circuit StoreKit product loading for the paywall scene, or the price won't render.
+- **Reviewer demonstration video (recommended):** for features gated behind credentials the reviewer lacks (e.g. an App Store Connect API key) or an OS/hardware requirement (Apple Intelligence, a specific macOS), record a private end-to-end demo video and attach it in App Store Connect → App Review Information → **Attachment**, with explanatory notes. Protect any secrets shown (use a dedicated/revocable key). This is a separate file from the public App Preview.
+- The full App Review demo-account/notes strategy is owned by the `app-store-review-compliance` skill.
 
 ## Phase 3 — Script the demo flow
 
@@ -89,7 +98,7 @@ Show the user the flow and a dry-run plan before capturing.
 Use the bundled scripts — don't improvise capture commands, the scripts handle status-bar override, recording lifecycle, and output layout:
 
 - `scripts/capture_ios.sh` — boots the right simulator, applies the clean 9:41 status bar, runs the test per locale, records video, extracts screenshot attachments from the `.xcresult`.
-- `scripts/capture_mac.sh` — positions/sizes the app window, captures stills and video of just that window region.
+- `scripts/capture_mac.sh` — positions/sizes the app window, captures stills and video of just that window region. The window grab includes the title bar so it's almost never an accepted Mac size (e.g. 1440×952@2x = 2880×1904); the script auto-composes an upload-ready `<name>-2880x1800.png` (scale-to-fit + white pad, flattened to RGB — no alpha) when ffmpeg is present. It also `rm`s any prior `_raw.mov` before recording (`screencapture -v` won't overwrite, which would otherwise silently re-encode a stale take).
 
 Both scripts print usage with `-h`. Output lands under the `-o` root (default `./AppStoreMedia`) as `<root>/<AppName>/<locale>/raw/`.
 

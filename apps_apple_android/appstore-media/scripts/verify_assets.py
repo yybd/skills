@@ -61,20 +61,27 @@ def report(path, ok, msg):
 def check_image(path):
     try:
         out = subprocess.check_output(
-            ["sips", "-g", "pixelWidth", "-g", "pixelHeight", path], text=True)
+            ["sips", "-g", "pixelWidth", "-g", "pixelHeight", "-g", "hasAlpha", path], text=True)
         w = int([l for l in out.splitlines() if "pixelWidth" in l][0].split()[-1])
         h = int([l for l in out.splitlines() if "pixelHeight" in l][0].split()[-1])
+        alpha_lines = [l for l in out.splitlines() if "hasAlpha" in l]
+        has_alpha = bool(alpha_lines) and alpha_lines[0].split()[-1].lower() == "yes"
     except Exception as e:
         report(path, False, f"could not read image: {e}")
         return
     label = SCREENSHOT_SIZES.get((w, h))
-    if label:
-        report(path, True, f"{w}x{h} — accepted ({label})")
-    else:
+    if not label:
         near = min(SCREENSHOT_SIZES, key=lambda s: abs(s[0]-w) + abs(s[1]-h))
         report(path, False,
                f"{w}x{h} is NOT an accepted screenshot size "
                f"(closest accepted: {near[0]}x{near[1]} = {SCREENSHOT_SIZES[near]})")
+    elif has_alpha:
+        # App Store Connect rejects screenshots with an alpha channel.
+        report(path, False,
+               f"{w}x{h} ({label}) but has an ALPHA channel — App Store Connect "
+               f"rejects screenshots with alpha. Flatten to RGB (no alpha) before upload.")
+    else:
+        report(path, True, f"{w}x{h} — accepted ({label}), no alpha")
 
 
 def ffprobe(path):
