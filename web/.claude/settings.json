@@ -1,0 +1,6 @@
+{
+  "enabledPlugins": {
+    "web-track@app-factory": true,
+    "design-track@app-factory": true
+  }
+}
